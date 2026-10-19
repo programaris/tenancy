@@ -27,12 +27,12 @@ jobs:
 
         steps:
             - name: Checkout source
-              uses: actions/checkout@v4
+              uses: actions/checkout@v7
               with:
                   fetch-depth: 0
 
             - name: Install .NET SDK
-              uses: actions/setup-dotnet@v4
+              uses: actions/setup-dotnet@v6
               with:
                   dotnet-version: '10.0.x'
 
@@ -106,7 +106,7 @@ jobs:
 
             - name: Upload NuGet validation artifacts
               if: runner.os == 'Linux'
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: tenancy-nuget-${{ steps.version.outputs.version }}
                   path: |
