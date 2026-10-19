@@ -6,8 +6,7 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
 > [!IMPORTANT]
-> **Pre-release source: not yet certified or published as a production-ready package.**
-> Package version `0.1.0-preview.1` is the local build default; CI creates `0.1.0-dev.N` artifacts. The `0.1.0` release requires passing the [release checklist](docs/release-checklist.md).
+> **Release policy:** local builds default to `0.1.0-preview.1`; untagged CI runs create `0.1.0-dev.N` artifacts. Only packages verified on NuGet.org are published stable releases. The `0.1.0` promotion requires the [release checklist](docs/release-checklist.md) and [protected publishing workflow](docs/operations/nuget-v0.1.0-publishing.md).
 
 PROGRAMARIS uses its own services as a tenant. External consumers use the same public tenant-selection convention. This repository contains client-facing contracts, integration helpers, samples, and documentation, **not** tenant administration, identity-provider implementation, or authorization rules.
 

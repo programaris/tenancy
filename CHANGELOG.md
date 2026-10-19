@@ -4,6 +4,10 @@ All notable changes are recorded here. The project follows [Semantic Versioning]
 
 ## [Unreleased]
 
+No changes since the v0.1.0 baseline.
+
+## [0.1.0] — Prepared for stable publication
+
 ### Added
 
 - Portable `netstandard2.0` contracts and dual-target `netstandard2.0;net10.0` core.
@@ -23,4 +27,4 @@ All notable changes are recorded here. The project follows [Semantic Versioning]
 - Standardized problem response media type as `application/problem+json`.
 - Corrected sample path and port in documentation.
 
-No production-ready NuGet release is implied by this unreleased change log entry.
+Stable package publication requires an approved `v0.1.0` tag, successful tag CI, SourceLink and package integrity certification, and authorized NuGet Trusted Publishing.

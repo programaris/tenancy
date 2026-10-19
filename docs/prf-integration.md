@@ -7,12 +7,15 @@ This public repository implements the **compatible version and NuGet package inv
 - `distribution.json` uses the PRF schema-1 package inventory with exactly three public NuGet packages.
 - `eng/validate_distribution.py` checks the inventory and project metadata.
 - `eng/verify_packages.py` examines generated packages, target frameworks, license and README.
-- `eng/smoke_consumer.py` compiles and runs a new .NET 10 app against the generated NuGet packages.
+- `eng/smoke_consumer.py` runs isolated .NET 8 portable and .NET 10 ASP.NET Core consumers against generated NuGet packages.
 - `eng/create_artifact_manifest.py` records SHA-256 hashes and the exact source commit.
+- `eng/verify_artifact_manifest.py` rechecks six package SHA-256 hashes and the exact source SHA before promotion.
+- `eng/fixtures/SourceLinkProbe` checks PDB source mapping, file hashes and NuSpec source commit.
 - `.github/workflows/ci.yml` compiles and tests on GitHub-hosted Ubuntu/Windows runners, packs artifacts on Ubuntu, and **never publishes**.
+- `.github/workflows/publish.yml` is a separate manually authorized, environment-protected stable promotion using NuGet Trusted Publishing OIDC.
 
 ## Release gating
 
-No workflow in this repository may call a private PRF checkout from untrusted PRs or execute forked code on a persistent self-hosted runner. A future separate publishing workflow must use protected environments, immutable release tags and OIDC Trusted Publishing to nuget.org. Establish that workflow only after the CI and end-to-end consumer smoke test succeed.
+No workflow in this repository may call a private PRF checkout from untrusted PRs or execute forked code on a persistent self-hosted runner. Configure the `nuget-production` GitHub environment and NuGet.org Trusted Publishing policy for `publish.yml`. The manual promotion workflow requires an approved tag, confirms successful tag CI, and never exposes publish credentials to untrusted PR jobs.
 
 The private PRF reference currently treats a complete multi-package publisher as an incremental capability. Do not describe this repository's preliminary CI as full PRF adoption or claim that `v0.1.0` has been released until verified publishing and package installation are complete.
