@@ -1,0 +1,158 @@
+name: Publish NuGet v0.1.0
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Approved, CI-certified stable tag"
+        type: choice
+        options: [v0.1.0]
+        required: true
+      nuget_user:
+        description: "NuGet.org username (public account name, not a password)"
+        type: string
+        required: true
+      confirmation:
+        description: "Type PUBLISH to release all three public packages"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tenancy-nuget-stable-v010
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Verify, authorize, publish and create release
+    if: github.ref == 'refs/heads/dev' && inputs.release_tag == 'v0.1.0' && inputs.confirmation == 'PUBLISH'
+    environment: nuget-production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      id-token: write
+      contents: write
+
+    steps:
+      - name: Checkout approved stable tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.release_tag }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Require tag to match protected dev HEAD
+        id: verify
+        shell: bash
+        env:
+          TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin dev
+          SHA="$(git rev-parse HEAD)"
+          TAG_SHA="$(git rev-parse "refs/tags/${TAG}^{commit}")"
+          test "$SHA" = "$TAG_SHA"
+          test "$SHA" = "$(git rev-parse origin/dev)"
+          test "$(python -c 'import json; print(json.load(open("version.json"))["nextVersion"])')" = "0.1.0"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "Release source verified: $SHA"
+
+      - name: Find successful tag-triggered certification
+        id: certified
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          RUN_ID="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${{ steps.verify.outputs.sha }}&event=push&per_page=100" \
+            --jq '.workflow_runs[] | select(.head_branch == env.TAG and .status == "completed" and .conclusion == "success") | .id' | head -n 1)"
+          test -n "$RUN_ID"
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "Approved tag CI: $RUN_ID"
+
+      - name: Download only the certified stable artifacts
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/nuget
+          gh run download "${{ steps.certified.outputs.run_id }}" \
+            --name tenancy-nuget-0.1.0 \
+            --dir artifacts/nuget
+
+      - name: Install .NET 10 for independent PDB validation
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Re-verify all packages, SHA-256 manifest and SourceLink
+        shell: bash
+        run: |
+          set -euo pipefail
+          python eng/verify_packages.py --version 0.1.0 --directory artifacts/nuget
+          python eng/verify_artifact_manifest.py \
+            --version 0.1.0 \
+            --source-sha "${{ steps.verify.outputs.sha }}" \
+            --directory artifacts/nuget
+          dotnet run \
+            --project eng/fixtures/SourceLinkProbe/SourceLinkProbe.csproj \
+            --configuration Release \
+            --no-launch-profile \
+            -- artifacts/nuget 0.1.0 "${{ steps.verify.outputs.sha }}" "$PWD"
+
+      - name: Exchange GitHub OIDC for short-lived NuGet credentials
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ inputs.nuget_user }}
+
+      - name: Publish exactly three stable packages and accompanying symbols
+        shell: bash
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+        run: |
+          set -euo pipefail
+          for id in Programaris.Tenancy.Abstractions Programaris.Tenancy Programaris.Tenancy.AspNetCore; do
+            dotnet nuget push "artifacts/nuget/${id}.0.1.0.nupkg" \
+              --source https://api.nuget.org/v3/index.json \
+              --api-key "$NUGET_API_KEY" \
+              --timeout 300
+          done
+
+      - name: Verify all three packages are available publicly
+        shell: bash
+        run: |
+          set -euo pipefail
+          for id in programaris.tenancy.abstractions programaris.tenancy programaris.tenancy.aspnetcore; do
+            URL="https://api.nuget.org/v3-flatcontainer/${id}/0.1.0/${id}.0.1.0.nupkg"
+            PUBLISHED=false
+            for attempt in $(seq 1 30); do
+              if curl --fail --silent --head "$URL" >/dev/null; then
+                PUBLISHED=true
+                break
+              fi
+              sleep 15
+            done
+            test "$PUBLISHED" = "true"
+            echo "NuGet.org verified: $id 0.1.0"
+          done
+
+      - name: Create GitHub release with packages, symbols and SHA-256 manifest
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" \
+            artifacts/nuget/*.nupkg \
+            artifacts/nuget/*.snupkg \
+            artifacts/nuget/release-manifest.json \
+            --verify-tag \
+            --title "PROGRAMARIS Tenancy v0.1.0" \
+            --notes-file docs/releases/v0.1.0-notes.md \
+            --latest
