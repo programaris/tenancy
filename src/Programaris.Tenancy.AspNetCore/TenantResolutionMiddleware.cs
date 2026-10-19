@@ -31,7 +31,7 @@ namespace Programaris.Tenancy.AspNetCore
 
             if (!context.Request.Headers.TryGetValue(options.HeaderName, out var values) || values.Count == 0)
             {
-                if (options.RequireTenant && !allowMissing)
+                if (!allowMissing)
                 {
                     await WriteProblemAsync(context, "Tenant header is required", "tenant_header_missing");
 

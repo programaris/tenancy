@@ -18,6 +18,7 @@ PROGRAMARIS uses its own services as a tenant. External consumers use the same p
 - Explicitly allow tenant-less endpoints such as health probes.
 - Explicitly propagate the selected tenant to known downstream HTTP services.
 - Reject malformed, missing mandatory, and repeated tenant headers.
+- Never infer a default tenant or disable tenant requirements globally; only explicit `AllowMissingTenant()` endpoints can omit a tenant.
 - Keep tenant **selection** separate from **authentication and authorization**.
 
 ### Not provided
@@ -65,11 +66,7 @@ The final request should return HTTP 400 with `tenant_header_missing`. A success
 using Programaris.Tenancy.Abstractions;
 using Programaris.Tenancy.AspNetCore;
 
-builder.Services.AddProgramarisTenancy(options =>
-{
-    options.HeaderName = TenantHeaderOptions.DefaultHeaderName;
-    options.RequireTenant = true;
-});
+builder.Services.AddProgramarisTenancy();
 
 var app = builder.Build();
 
@@ -98,6 +95,7 @@ Only propagate to approved internal services. Do not forward an untrusted inboun
 - [Documentation index](docs/README.md)
 - [Getting started](docs/getting-started.md)
 - [HTTP contract](docs/reference/http-contract.md)
+- [Explicit tenant context ADR](docs/adr/0003-explicit-tenant-context.md)
 - [Trust boundaries](docs/security/trust-boundaries.md)
 - [Release checklist](docs/release-checklist.md)
 - [PRF conventions](docs/prf-integration.md)

@@ -16,6 +16,8 @@ All notable changes are recorded here. The project follows [Semantic Versioning]
 
 ### Changed
 
+- Removed the global tenant opt-out; tenant-independent routes must opt out explicitly per endpoint.
+- Documented the no-implicit-tenant policy and independent SDK certification.
 - Standardized problem response media type as `application/problem+json`.
 - Corrected sample path and port in documentation.
 
