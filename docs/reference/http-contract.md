@@ -9,8 +9,9 @@
 | Missing mandatory header | HTTP 400 `tenant_header_missing` |
 | Present but malformed/empty header | HTTP 400 `tenant_header_invalid` |
 | Endpoint with `AllowMissingTenant()` | Missing header permitted, invalid present header still rejected |
-| `RequireTenant = false` | Missing header permitted globally, present header still validated |
 | Body media type on parsing error | `application/problem+json` |
+
+There is no global tenant opt-out or implicit tenant fallback. Only endpoints explicitly marked with `AllowMissingTenant()` can omit the header. Tenant-independent endpoints remain subject to their host's authentication and authorization policies.
 
 ```http
 GET /v1/example HTTP/1.1

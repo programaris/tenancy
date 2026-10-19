@@ -128,14 +128,35 @@ namespace Programaris.Tenancy.AspNetCore.Tests
         }
 
         [Fact]
-        public async Task TenantCanBeOptionalGlobally()
+        public async Task AllowMissingTenantDoesNotMakeOtherEndpointsOptional()
         {
-            await using var app = await CreateAppAsync(options => options.RequireTenant = false);
+            await using var app = await CreateAppAsync();
             using var client = app.GetTestClient();
-            using var response = await client.GetAsync("/v1/optional", TestContext.Current.CancellationToken);
 
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.False(await ReadBooleanPropertyAsync(response, "hasTenant"));
+            using var optional = await client.GetAsync("/v1/optional", TestContext.Current.CancellationToken);
+            using var required = await client.GetAsync("/v1/tenant", TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.OK, optional.StatusCode);
+            Assert.False(await ReadBooleanPropertyAsync(optional, "hasTenant"));
+            Assert.Equal(HttpStatusCode.BadRequest, required.StatusCode);
+            Assert.Equal("tenant_header_missing", await ReadPropertyAsync(required, "code"));
+        }
+
+        [Fact]
+        public async Task OptionalEndpointNeverInheritsTenantFromPreviousRequest()
+        {
+            await using var app = await CreateAppAsync();
+            using var client = app.GetTestClient();
+            using var selectedRequest = new HttpRequestMessage(HttpMethod.Get, "/v1/tenant");
+
+            selectedRequest.Headers.Add("X-Tenant", "programaris");
+
+            using var selectedResponse = await client.SendAsync(selectedRequest, TestContext.Current.CancellationToken);
+            using var optionalResponse = await client.GetAsync("/v1/optional", TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.OK, selectedResponse.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, optionalResponse.StatusCode);
+            Assert.False(await ReadBooleanPropertyAsync(optionalResponse, "hasTenant"));
         }
 
         [Fact]

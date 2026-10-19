@@ -40,6 +40,8 @@ def main():
             license_node = next((c for c in metadata if c.tag.split("}")[-1] == "license"), None)
             if license_node is None or license_node.text != "Apache-2.0":
                 parser.error(f"Incorrect license metadata: {package_id}")
+            if text(metadata, "icon") != "programaris-icon.png" or "programaris-icon.png" not in names:
+                parser.error(f"Missing or incorrect NuGet icon: {package_id}")
             for framework in targets:
                 if f"lib/{framework}/{package_id}.dll" not in names:
                     parser.error(f"Missing target {framework}: {package_id}")

@@ -8,6 +8,7 @@
 - [Trust boundaries](security/trust-boundaries.md) — selection versus authorization.
 - [ADR-0001](adr/0001-public-sdk-boundary.md) — public SDK boundary.
 - [ADR-0002](adr/0002-header-convention.md) — `X-Tenant` convention.
+- [ADR-0003](adr/0003-explicit-tenant-context.md) — no implicit default tenant or global opt-out.
 - [PRF integration](prf-integration.md) — build-version and package manifest alignment.
 - [Release policy](release-policy.md) — versioning and promotion.
 - [Release checklist](release-checklist.md) — requirements before `v0.1.0`.

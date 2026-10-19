@@ -28,7 +28,7 @@ Application code        Explicit HTTP propagation
 
 1. Routing resolves endpoint metadata.
 2. Middleware looks for the configured header.
-3. Invalid headers fail with HTTP 400; absence fails by default unless explicitly allowed.
+3. Invalid headers fail with HTTP 400; absence always fails for tenant-aware endpoints, with no default tenant or global opt-out. An explicitly marked `AllowMissingTenant()` endpoint may omit the header.
 4. A DI-scoped accessor is initialized once and made available to downstream code.
 5. The host authenticates and authorizes the caller and enforces tenant-aware resource isolation.
 6. The request DI scope is disposed at completion, including exceptional paths.

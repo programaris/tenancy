@@ -31,7 +31,7 @@ The `/v1/tenant` response describes the **selected** tenant. It does not authent
 
 The host registers services via `AddProgramarisTenancy()` and activates `UseProgramarisTenancy()` after routing. Application classes depend only on `Programaris.Tenancy.Abstractions.ITenantContextAccessor`.
 
-`GetRequired()` throws `TenantContextUnavailableException` when context is unavailable. `Current` returns null. Selectively add `.AllowMissingTenant()` to routes not requiring the header, for example readiness and health checks.
+`GetRequired()` throws `TenantContextUnavailableException` when context is unavailable. `Current` returns null. The SDK never selects a tenant from configuration or falls back to a platform tenant. Selectively add `.AllowMissingTenant()` only to tenant-independent endpoints, for example readiness and health checks. This is an endpoint-level exception; a global tenant opt-out is not supported.
 
 Use `AddProgramarisTenant()` only on outbound requests to trusted, approved recipients. **Do not install any automatic global propagation handler.** A receiving service must independently authenticate and authorize the caller and validate the target tenant.
 

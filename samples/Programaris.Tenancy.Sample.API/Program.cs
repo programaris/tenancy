@@ -5,11 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.UseUrls("http://localhost:5001");
 
-builder.Services.AddProgramarisTenancy(options =>
-{
-    options.HeaderName = TenantHeaderOptions.DefaultHeaderName;
-    options.RequireTenant = true;
-});
+builder.Services.AddProgramarisTenancy();
 
 var app = builder.Build();
 

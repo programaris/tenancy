@@ -6,6 +6,7 @@
 
 - [ ] Verify stable public contracts for `TenantContext`, `ITenantContextAccessor` and `TenantSlug`.
 - [ ] Confirm middleware fail-closed behavior and explicit endpoint exceptions.
+- [ ] Confirm no default tenant or global opt-out exists; missing tenant remains absent on optional routes.
 - [ ] Confirm malformed, repeated and conflicting tenant headers fail.
 - [ ] Confirm authorization remains the consuming application's responsibility.
 - [ ] Confirm propagation is opt-in and rejects pre-existing tenant headers.
@@ -19,7 +20,7 @@
 - [ ] NuGet artifacts contain all advertised TFMs and no private dependencies.
 - [ ] A clean external consumer installs and runs against each published package's supported target.
 - [ ] Unity Mono/IL2CPP claims are withheld until Unity-specific smoke tests pass.
-- [ ] Security review includes malformed input, external propagation and header/identity mismatch in real hosts.
+- [ ] SDK-level security review includes malformed input, external propagation, and request-scope isolation; consuming hosts enforce token/header coherence.
 
 ## Delivery and documentation
 
@@ -29,7 +30,8 @@
 - [ ] Release notes, package metadata and `CHANGELOG.md` reflect the exact release.
 - [ ] SourceLink, symbols, license and README are verified in produced packages.
 - [ ] A full source SHA and SHA-256 hashes are recorded for six package artifacts.
-- [ ] Gateway and Identity integration semantics are tested using the actual `X-Tenant` contract.
+- [ ] An isolated consumer validates the public NuGet contract independently of Gateway, Identity, or any private host.
+- [ ] Adoption in Gateway and Identity is tracked separately and does not block the public SDK release.
 - [ ] GitHub Actions workflow for release publication uses OIDC, protected environment and approved tags.
 - [ ] A release-candidate artifact is reviewed before `v0.1.0` is promoted.
 
