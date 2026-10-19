@@ -9,7 +9,10 @@ This public repository implements the **compatible version and NuGet package inv
 - `eng/verify_packages.py` examines generated packages, target frameworks, license and README.
 - `eng/smoke_consumer.py` runs isolated .NET 8 portable and .NET 10 ASP.NET Core consumers against generated NuGet packages.
 - `eng/create_artifact_manifest.py` records SHA-256 hashes and the exact source commit.
+- `eng/verify_artifact_manifest.py` rechecks six package SHA-256 hashes and the exact source SHA before promotion.
+- `eng/fixtures/SourceLinkProbe` checks PDB source mapping, file hashes and NuSpec source commit.
 - `.github/workflows/ci.yml` compiles and tests on GitHub-hosted Ubuntu/Windows runners, packs artifacts on Ubuntu, and **never publishes**.
+- `.github/workflows/publish.yml` is a separate manually authorized, environment-protected stable promotion using NuGet Trusted Publishing OIDC.
 
 ## Release gating
 
