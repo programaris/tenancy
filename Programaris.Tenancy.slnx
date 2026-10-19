@@ -8,10 +8,36 @@
     <Project Path="tests/Programaris.Tenancy.AspNetCore.Tests/Programaris.Tenancy.AspNetCore.Tests.csproj" />
     <Project Path="tests/Programaris.Tenancy.Tests/Programaris.Tenancy.Tests.csproj" />
   </Folder>
+  <Folder Name="/assets/" />
+  <Folder Name="/docs/">
+    <File Path="docs/compatibility.md" />
+    <File Path="docs/getting-started.md" />
+    <File Path="docs/prf-integration.md" />
+    <File Path="docs/README.md" />
+    <File Path="docs/release-checklist.md" />
+    <File Path="docs/release-policy.md" />
+  </Folder>
+  <Folder Name="/docs/adr/">
+    <File Path="docs/adr/0001-public-sdk-boundary.md" />
+    <File Path="docs/adr/0002-header-convention.md" />
+  </Folder>
+  <Folder Name="/docs/architecture/">
+    <File Path="docs/architecture/overview.md" />
+  </Folder>
+  <Folder Name="/docs/concepts/">
+    <File Path="docs/concepts/tenant-context.md" />
+  </Folder>
+  <Folder Name="/docs/reference/">
+    <File Path="docs/reference/http-contract.md" />
+  </Folder>
+  <Folder Name="/docs/security/">
+    <File Path="docs/security/trust-boundaries.md" />
+  </Folder>
   <Folder Name="/eng/">
     <File Path="eng/create_artifact_manifest.py" />
     <File Path="eng/smoke_consumer.py" />
     <File Path="eng/test_version.py" />
+    <File Path="eng/validate-local.ps1" />
     <File Path="eng/validate_distribution.py" />
     <File Path="eng/verify_packages.py" />
     <File Path="eng/version.py" />

@@ -5,7 +5,7 @@
 
 ## Decision
 
-Use `X-Tenant` as the default request header. Its value is a lowercase tenant slug such as `programaris` or `dibs`. Reject missing required headers, repeated headers, malformed slugs, and silently implied default tenants.
+Use `X-Tenant` as the default request header. Its value is a lowercase tenant slug such as `programaris` or `acme`. Reject missing required headers, repeated headers, malformed slugs, and silently implied default tenants.
 
 The header name can be configured per host for compatibility with legacy services. A configured alternative is not treated as an additional simultaneously trusted source.
 

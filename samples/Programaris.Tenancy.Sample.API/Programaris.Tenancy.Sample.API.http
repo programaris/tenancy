@@ -1,6 +1,6 @@
-﻿@HostAddress = http://localhost:5001
+@HostAddress = http://localhost:5001
 @Tenant = programaris
-@OtherTenant = another
+@OtherTenant = acme
 
 ### Health Check - Expected: 200 OK
 GET {{HostAddress}}/health
@@ -12,7 +12,7 @@ Accept: application/json
 X-Tenant: {{Tenant}}
 ###
 
-### Get Current Tenant - ANOTHER
+### Get Current Tenant - ACME
 GET {{HostAddress}}/v1/tenant
 Accept: application/json
 X-Tenant: {{OtherTenant}}
