@@ -96,7 +96,7 @@ def validate_packages(directory, version):
             if metadata_value(metadata, "icon") != PACKAGE_ICON or PACKAGE_ICON not in names:
                 raise ValueError(f"Missing package icon: {package_id}")
 
-            if package.read(PACKAGE_ICON)[:8] != b"\\x89PNG\\r\\n\\x1a\\n":
+            if package.read(PACKAGE_ICON)[:8] != b"\x89PNG\r\n\x1a\n":
                 raise ValueError(f"Invalid PNG icon: {package_id}")
 
             repository = next(
