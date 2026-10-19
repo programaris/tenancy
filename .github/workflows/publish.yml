@@ -131,17 +131,17 @@ jobs:
         run: |
           set -euo pipefail
           for id in programaris.tenancy.abstractions programaris.tenancy programaris.tenancy.aspnetcore; do
-            URL="https://api.nuget.org/v3-flatcontainer/${id}/0.1.0/${id}.0.1.0.nupkg"
+            URL="https://api.nuget.org/v3-flatcontainer/${id}/index.json"
             PUBLISHED=false
-            for attempt in $(seq 1 30); do
-              if curl --fail --silent --head "$URL" >/dev/null; then
+            for attempt in $(seq 1 60); do
+              if curl --fail --silent --show-error --retry 2 "$URL" | python -c 'import json,sys; sys.exit(0 if "0.1.0" in json.load(sys.stdin).get("versions", []) else 1)'; then
                 PUBLISHED=true
                 break
               fi
               sleep 15
             done
             test "$PUBLISHED" = "true"
-            echo "NuGet.org verified: $id 0.1.0"
+            echo "NuGet.org feed verified: $id 0.1.0"
           done
 
       - name: Create GitHub release with packages, symbols and SHA-256 manifest
