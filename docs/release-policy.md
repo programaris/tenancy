@@ -15,6 +15,6 @@
 
 This repository's CI **only validates and uploads package artifacts**. It never publishes, creates tags, or promotes releases.
 
-Production publication requires (a) approved release commit and protected tag, (b) passing all CI/compatibility/security gates, (c) release notes, (d) version alignment and binary provenance, and (e) a separate, authorized publishing workflow using NuGet Trusted Publishing (OIDC) with environment approvals.
+Production publication requires (a) approved `v0.1.0` tag pointing to protected `dev` HEAD, (b) passing Windows/Linux tagged CI, portable consumer, SourceLink and SHA-256 integrity gates, (c) release notes, (d) the protected `nuget-production` environment, and (e) explicit manual execution of `.github/workflows/publish.yml` with `PUBLISH` confirmation. That workflow downloads **the exact tagged CI packages**, verifies them independently, and uses NuGet Trusted Publishing OIDC without a long-lived API key. Successful publication is followed by a GitHub Release with six artifacts and a manifest. `v0.1.0-rc.1` is for certification only and is never published.
 
 The internally maintained corporate PRF starter is not directly referenced from the public GitHub Actions workflow. See [PRF integration](prf-integration.md).
