@@ -4,6 +4,10 @@ All notable changes are recorded here. The project follows [Semantic Versioning]
 
 ## [Unreleased]
 
+No changes since the v0.1.0 baseline.
+
+## [0.1.0] — Prepared for stable publication
+
 ### Added
 
 - Portable `netstandard2.0` contracts and dual-target `netstandard2.0;net10.0` core.
