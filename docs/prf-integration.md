@@ -7,7 +7,7 @@ This public repository implements the **compatible version and NuGet package inv
 - `distribution.json` uses the PRF schema-1 package inventory with exactly three public NuGet packages.
 - `eng/validate_distribution.py` checks the inventory and project metadata.
 - `eng/verify_packages.py` examines generated packages, target frameworks, license and README.
-- `eng/smoke_consumer.py` compiles and runs a new .NET 10 app against the generated NuGet packages.
+- `eng/smoke_consumer.py` runs isolated .NET 8 portable and .NET 10 ASP.NET Core consumers against generated NuGet packages.
 - `eng/create_artifact_manifest.py` records SHA-256 hashes and the exact source commit.
 - `.github/workflows/ci.yml` compiles and tests on GitHub-hosted Ubuntu/Windows runners, packs artifacts on Ubuntu, and **never publishes**.
 
