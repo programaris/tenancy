@@ -81,6 +81,11 @@ jobs:
                       -p:AssemblyVersion="${{ steps.version.outputs.assembly_version }}" \
                       -p:FileVersion="${{ steps.version.outputs.file_version }}"
 
+            - name: Exercise local validation script (Windows)
+              if: runner.os == 'Windows'
+              shell: pwsh
+              run: ./eng/validate-local.ps1 -Version "${{ steps.version.outputs.version }}"
+
             - name: Pack public NuGet packages (validation only)
               if: runner.os == 'Linux'
               shell: bash
