@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+        <Description>Core tenant identifier validation for PROGRAMARIS integrations.</Description>
+        <PackageId>Programaris.Tenancy</PackageId>
+        <IsPackable>true</IsPackable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Programaris.Tenancy.Abstractions/Programaris.Tenancy.Abstractions.csproj" />
+        <None Include="../../README.md" Pack="true" PackagePath="/" />
+    </ItemGroup>
+
+</Project>

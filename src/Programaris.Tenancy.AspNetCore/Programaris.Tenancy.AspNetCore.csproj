@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Description>ASP.NET Core tenant header selection helpers for PROGRAMARIS integrations.</Description>
+        <PackageId>Programaris.Tenancy.AspNetCore</PackageId>
+        <IsPackable>true</IsPackable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <ProjectReference Include="../Programaris.Tenancy/Programaris.Tenancy.csproj" />
+        <None Include="../../README.md" Pack="true" PackagePath="/" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,43 @@
+﻿@HostAddress = http://localhost:5001
+@Tenant = programaris
+@OtherTenant = another
+
+### Health Check - Expected: 200 OK
+GET {{HostAddress}}/health
+###
+
+### Get Current Tenant — PROGRAMARIS
+GET {{HostAddress}}/v1/tenant
+Accept: application/json
+X-Tenant: {{Tenant}}
+###
+
+### Get Current Tenant - ANOTHER
+GET {{HostAddress}}/v1/tenant
+Accept: application/json
+X-Tenant: {{OtherTenant}}
+###
+
+### Missing Tenant - Expected: Rejected when tenant is required
+GET {{HostAddress}}/v1/tenant
+Accept: application/json
+###
+
+### Invalid Tenant Format - Expected: Rejected
+GET {{HostAddress}}/v1/tenant
+Accept: application/json
+X-Tenant: invalid_tenant!
+###
+
+### Empty Tenant - Expected: Rejected
+GET {{HostAddress}}/v1/tenant
+Accept: application/json
+X-Tenant:
+###
+
+### Conflicting Tenant Headers - Expected: Rejected
+GET {{HostAddress}}/v1/tenant
+Accept: application/json
+X-Tenant: {{Tenant}}
+X-Tenant: {{OtherTenant}}
+###

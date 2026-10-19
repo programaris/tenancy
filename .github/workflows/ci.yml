@@ -1,0 +1,119 @@
+name: CI
+
+on:
+    push:
+        branches: [dev, main]
+        tags: ['v*']
+    pull_request:
+        branches: [dev, main]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ci-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    build-test-pack:
+        name: Verify (${{ matrix.os }}, .NET 10)
+        runs-on: ${{ matrix.os }}
+        timeout-minutes: 20
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-latest, windows-latest]
+
+        steps:
+            - name: Checkout source
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Install .NET SDK
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: '10.0.x'
+
+            - name: Validate PRF package inventory
+              shell: bash
+              run: |
+                  python eng/validate_distribution.py
+                  python -m unittest discover -s eng -p 'test_*.py'
+
+            - name: Resolve build version
+              id: version
+              shell: bash
+              run: |
+                  TAG=""
+                  if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+                      TAG="$GITHUB_REF_NAME"
+                  fi
+                  python eng/version.py \
+                      --run-number "$GITHUB_RUN_NUMBER" \
+                      --sha "$GITHUB_SHA" \
+                      --tag "$TAG" \
+                      --output "$GITHUB_OUTPUT"
+
+            - name: Restore
+              shell: bash
+              run: dotnet restore Programaris.Tenancy.slnx
+
+            - name: Build
+              shell: bash
+              run: |
+                  dotnet build Programaris.Tenancy.slnx \
+                      --configuration Release \
+                      --no-restore \
+                      -warnaserror \
+                      -p:Version="${{ steps.version.outputs.version }}" \
+                      -p:AssemblyVersion="${{ steps.version.outputs.assembly_version }}" \
+                      -p:FileVersion="${{ steps.version.outputs.file_version }}"
+
+            - name: Test
+              shell: bash
+              run: |
+                  dotnet test Programaris.Tenancy.slnx \
+                      --configuration Release \
+                      --no-restore \
+                      -p:Version="${{ steps.version.outputs.version }}" \
+                      -p:AssemblyVersion="${{ steps.version.outputs.assembly_version }}" \
+                      -p:FileVersion="${{ steps.version.outputs.file_version }}"
+
+            - name: Pack public NuGet packages (validation only)
+              if: runner.os == 'Linux'
+              shell: bash
+              run: |
+                  dotnet pack Programaris.Tenancy.slnx \
+                      --configuration Release \
+                      --no-build \
+                      --no-restore \
+                      --output artifacts/nuget \
+                      -p:Version="${{ steps.version.outputs.version }}" \
+                      -p:AssemblyVersion="${{ steps.version.outputs.assembly_version }}" \
+                      -p:FileVersion="${{ steps.version.outputs.file_version }}"
+                  python eng/verify_packages.py \
+                      --version "${{ steps.version.outputs.version }}" \
+                      --directory artifacts/nuget
+                  python eng/smoke_consumer.py \
+                      --version "${{ steps.version.outputs.version }}" \
+                      --directory artifacts/nuget
+                  python eng/create_artifact_manifest.py \
+                      --version "${{ steps.version.outputs.version }}" \
+                      --source-sha "$GITHUB_SHA" \
+                      --directory artifacts/nuget
+
+            - name: Upload NuGet validation artifacts
+              if: runner.os == 'Linux'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: tenancy-nuget-${{ steps.version.outputs.version }}
+                  path: |
+                      artifacts/nuget/*.nupkg
+                      artifacts/nuget/*.snupkg
+                      artifacts/nuget/release-manifest.json
+                  if-no-files-found: error
+                  retention-days: 14
+
+# Intentionally no publish step. Promotion requires an approved, separate workflow.

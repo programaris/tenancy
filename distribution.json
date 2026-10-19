@@ -1,0 +1,22 @@
+{
+    "schemaVersion": 1,
+    "versionPolicy": "synchronized",
+    "packages": [
+        {
+            "kind": "nuget",
+            "id": "Programaris.Tenancy.Abstractions",
+            "path": "src/Programaris.Tenancy.Abstractions/Programaris.Tenancy.Abstractions.csproj"
+        },
+        {
+            "kind": "nuget",
+            "id": "Programaris.Tenancy",
+            "path": "src/Programaris.Tenancy/Programaris.Tenancy.csproj"
+        },
+        {
+            "kind": "nuget",
+            "id": "Programaris.Tenancy.AspNetCore",
+            "path": "src/Programaris.Tenancy.AspNetCore/Programaris.Tenancy.AspNetCore.csproj"
+        }
+    ],
+    "dependencies": []
+}

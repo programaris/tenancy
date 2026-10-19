@@ -1,0 +1,26 @@
+name: Bug report
+description: Report a reproducible non-security problem.
+title: "bug: "
+body:
+  - type: markdown
+    attributes:
+      value: Do not report security vulnerabilities here; see SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: main / dev / commit SHA
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and reproduction
+    validations:
+      required: true

@@ -1,0 +1,17 @@
+name: Feature request
+description: Suggest a public client integration feature.
+title: "feat: "
+body:
+  - type: textarea
+    id: scenario
+    attributes:
+      label: Consumer scenario
+      description: Explain the external use case without private service implementation details.
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Proposed public contract
+    validations:
+      required: true

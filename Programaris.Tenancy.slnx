@@ -1,0 +1,40 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Programaris.Tenancy.Abstractions/Programaris.Tenancy.Abstractions.csproj" />
+    <Project Path="src/Programaris.Tenancy.AspNetCore/Programaris.Tenancy.AspNetCore.csproj" />
+    <Project Path="src/Programaris.Tenancy/Programaris.Tenancy.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Programaris.Tenancy.AspNetCore.Tests/Programaris.Tenancy.AspNetCore.Tests.csproj" />
+    <Project Path="tests/Programaris.Tenancy.Tests/Programaris.Tenancy.Tests.csproj" />
+  </Folder>
+  <Folder Name="/eng/">
+    <File Path="eng/create_artifact_manifest.py" />
+    <File Path="eng/smoke_consumer.py" />
+    <File Path="eng/test_version.py" />
+    <File Path="eng/validate_distribution.py" />
+    <File Path="eng/verify_packages.py" />
+    <File Path="eng/version.py" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/Programaris.Tenancy.Sample.API/Programaris.Tenancy.Sample.API.csproj" />
+  </Folder>
+  <Folder Name="/_/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="CHANGELOG.md" />
+    <File Path="CODE_OF_CONDUCT.md" />
+    <File Path="CONTRIBUTING.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="distribution.json" />
+    <File Path="global.json" />
+    <File Path="LICENSE" />
+    <File Path="NOTICE" />
+    <File Path="README.md" />
+    <File Path="SECURITY.md" />
+    <File Path="SUPPORT.md" />
+    <File Path="version.json" />
+  </Folder>
+</Solution>

@@ -1,0 +1,35 @@
+<Project>
+
+    <PropertyGroup>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>latest</LangVersion>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <AnalysisLevel>latest</AnalysisLevel>
+        <Deterministic>true</Deterministic>
+
+        <!-- Local development defaults; the PRF version resolver overrides these in CI. -->
+        <Version Condition="'$(Version)' == ''">0.1.0-preview.1</Version>
+        <AssemblyVersion Condition="'$(AssemblyVersion)' == ''">0.1.0.0</AssemblyVersion>
+        <FileVersion Condition="'$(FileVersion)' == ''">0.1.0.0</FileVersion>
+
+        <Authors>PROGRAMARIS</Authors>
+        <Company>PROGRAMARIS</Company>
+        <Product>PROGRAMARIS Tenancy</Product>
+        <Copyright>Copyright (c) 2026 PROGRAMARIS</Copyright>
+        <RepositoryUrl>https://github.com/programaris/tenancy</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageProjectUrl>https://github.com/programaris/tenancy</PackageProjectUrl>
+        <PackageTags>programaris;tenancy;multi-tenant;dotnet;sdk</PackageTags>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    </PropertyGroup>
+
+</Project>
