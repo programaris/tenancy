@@ -43,4 +43,4 @@ python eng/validate_distribution.py
 python eng/verify_packages.py --version 0.1.0-preview.1 --directory artifacts/nuget
 ```
 
-The command verifies that the three package IDs and target assemblies exist. The release checklist includes further validation before publishing.
+The package verifier checks metadata, dependency inventory, portable symbols and all advertised targets. The isolated consumer smoke test runs with .NET 10. CI also executes an independent .NET 8 consumer against the portable `netstandard2.0` package. The release checklist includes further validation before publishing.

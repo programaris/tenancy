@@ -34,7 +34,9 @@ jobs:
             - name: Install .NET SDK
               uses: actions/setup-dotnet@v6
               with:
-                  dotnet-version: '10.0.x'
+                  dotnet-version: |
+                      8.0.x
+                      10.0.x
 
             - name: Validate PRF package inventory
               shell: bash
@@ -103,7 +105,12 @@ jobs:
                       --directory artifacts/nuget
                   python eng/smoke_consumer.py \
                       --version "${{ steps.version.outputs.version }}" \
-                      --directory artifacts/nuget
+                      --directory artifacts/nuget \
+                      --framework net10.0
+                  python eng/smoke_consumer.py \
+                      --version "${{ steps.version.outputs.version }}" \
+                      --directory artifacts/nuget \
+                      --framework net8.0
                   python eng/create_artifact_manifest.py \
                       --version "${{ steps.version.outputs.version }}" \
                       --source-sha "$GITHUB_SHA" \

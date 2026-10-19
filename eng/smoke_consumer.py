@@ -1,6 +1,5 @@
-
 #!/usr/bin/env python3
-"""Validate the public NuGet packages using an isolated .NET consumer."""
+"""Validate the NuGet SDK with isolated .NET 10 and .NET 8 consumers."""
 
 import argparse
 import os
@@ -17,34 +16,81 @@ PACKAGES = (
 )
 
 
-PROGRAM = r"""
+ASP_NET_CORE_PROGRAM = r"""
+using System;
+using System.Linq;
+using System.Net.Http;
+
 using Programaris.Tenancy;
 using Programaris.Tenancy.Abstractions;
 using Programaris.Tenancy.AspNetCore;
 
-var tenant = new TenantContext("programaris");
-
-if (!TenantSlug.TryParse(tenant.Slug, out string slug) ||
-    slug != "programaris")
+namespace Programaris.Tenancy.Consumer
 {
-    throw new InvalidOperationException(
-        "Portable tenant contract failed.");
+    internal static class Program
+    {
+        private static void Main()
+        {
+            var tenant = new TenantContext("programaris");
+
+            if (!TenantSlug.TryParse(tenant.Slug, out string slug) ||
+                slug != "programaris")
+            {
+                throw new InvalidOperationException("Tenant contract failed.");
+            }
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.invalid/");
+
+            request.AddProgramarisTenant(tenant);
+
+            if (request.Headers.GetValues("X-Tenant").Single() != "programaris")
+            {
+                throw new InvalidOperationException("HTTP tenant propagation failed.");
+            }
+
+            Console.WriteLine("ASP.NET Core package consumer smoke test passed.");
+        }
+    }
 }
-
-using var request = new HttpRequestMessage(
-    HttpMethod.Get,
-    "https://example.invalid/");
-
-request.AddProgramarisTenant(tenant);
-
-if (request.Headers.GetValues("X-Tenant").Single() != "programaris")
-{
-    throw new InvalidOperationException(
-        "HTTP tenant propagation failed.");
-}
-
-Console.WriteLine("Package consumer smoke test passed.");
 """
+
+
+PORTABLE_PROGRAM = r"""
+using System;
+
+using Programaris.Tenancy;
+using Programaris.Tenancy.Abstractions;
+
+namespace Programaris.Tenancy.PortableConsumer
+{
+    internal static class Program
+    {
+        private static void Main()
+        {
+            var tenant = new TenantContext("programaris");
+
+            if (!TenantSlug.TryParse(tenant.Slug, out string slug) ||
+                slug != "programaris")
+            {
+                throw new InvalidOperationException("Portable tenant context failed.");
+            }
+
+            if (TenantSlug.TryParse("INVALID", out _))
+            {
+                throw new InvalidOperationException("Invalid portable tenant was accepted.");
+            }
+
+            Console.WriteLine("Portable package consumer smoke test passed.");
+        }
+    }
+}
+"""
+
+
+CONSUMERS = {
+    "net10.0": ("Programaris.Tenancy.AspNetCore", ASP_NET_CORE_PROGRAM),
+    "net8.0": ("Programaris.Tenancy", PORTABLE_PROGRAM),
+}
 
 
 def run_command(command, environment):
@@ -85,21 +131,23 @@ def main():
         required=True,
     )
 
-    args = parser.parse_args()
+    parser.add_argument(
+        "--framework",
+        choices=tuple(CONSUMERS),
+        default="net10.0",
+        help="net8.0 exercises the portable netstandard2.0 packages; requires .NET 8.",
+    )
 
+    args = parser.parse_args()
     local_feed = Path(args.directory).resolve()
 
     validate_packages(local_feed, args.version)
 
-    with tempfile.TemporaryDirectory(
-        prefix="tenancy-nuget-consumer-"
-    ) as temp:
+    package_id, program = CONSUMERS[args.framework]
+
+    with tempfile.TemporaryDirectory(prefix="tenancy-nuget-consumer-") as temp:
         work = Path(temp)
-
         environment = os.environ.copy()
-
-        # Use an isolated package cache to ensure that dependencies
-        # are resolved from the generated local NuGet packages.
         environment["NUGET_PACKAGES"] = str(work / "packages")
 
         project = work / "Consumer.csproj"
@@ -108,13 +156,13 @@ def main():
             f"""<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>{args.framework}</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <NuGetAudit>false</NuGetAudit>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Programaris.Tenancy.AspNetCore"
+    <PackageReference Include="{package_id}"
                       Version="{args.version}" />
   </ItemGroup>
 </Project>
@@ -122,34 +170,19 @@ def main():
             encoding="utf-8",
         )
 
-        (work / "Program.cs").write_text(
-            PROGRAM,
-            encoding="utf-8",
-        )
+        (work / "Program.cs").write_text(program, encoding="utf-8")
 
         run_command(
-            [
-                "dotnet",
-                "restore",
-                str(project),
-                "--source",
-                str(local_feed),
-            ],
+            ["dotnet", "restore", str(project), "--source", str(local_feed)],
             environment,
         )
 
         run_command(
-            [
-                "dotnet",
-                "run",
-                "--no-restore",
-                "--project",
-                str(project),
-            ],
+            ["dotnet", "run", "--no-restore", "--project", str(project)],
             environment,
         )
 
-    print("NuGet consumer validation completed successfully.")
+    print(f"NuGet {args.framework} consumer validation completed successfully.")
 
 
 if __name__ == "__main__":

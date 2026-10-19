@@ -12,3 +12,4 @@
 - Do not reference `Programaris.Tenancy.AspNetCore` from Unity. It depends on the ASP.NET Core shared framework.
 - Background jobs/workers are out of scope for v0.1.0; the current accessor is created by ASP.NET Core per-request DI scope.
 - All three packages use one synchronized semantic version in a release.
+- The independent `.NET 8` package consumer exercises the `netstandard2.0` binaries using NuGet dependency resolution. This is not a claim of Unity Mono/IL2CPP compatibility.

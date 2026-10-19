@@ -18,7 +18,7 @@
 - [ ] `dotnet test Programaris.Tenancy.slnx -c Release` succeeds on Windows and Linux.
 - [ ] Concurrent request tests complete successfully, with no cross-tenant leakage.
 - [ ] NuGet artifacts contain all advertised TFMs and no private dependencies.
-- [ ] A clean external consumer installs and runs against each published package's supported target.
+- [ ] Isolated .NET 10 and .NET 8 consumers restore and execute their compatible NuGet targets; the .NET 8 consumer exercises the portable `netstandard2.0` package.
 - [ ] Unity Mono/IL2CPP claims are withheld until Unity-specific smoke tests pass.
 - [ ] SDK-level security review includes malformed input, external propagation, and request-scope isolation; consuming hosts enforce token/header coherence.
 
@@ -28,7 +28,8 @@
 - [ ] `python -m unittest discover -s eng -p 'test_*.py'` succeeds.
 - [ ] `python eng/verify_packages.py --version <actual version>` succeeds.
 - [ ] Release notes, package metadata and `CHANGELOG.md` reflect the exact release.
-- [ ] SourceLink, symbols, license and README are verified in produced packages.
+- [ ] Portable PDB symbols, license, README, icon, repository metadata and approved dependency inventory are verified in produced packages.
+- [ ] SourceLink mapping is verified for final release binaries.
 - [ ] A full source SHA and SHA-256 hashes are recorded for six package artifacts.
 - [ ] An isolated consumer validates the public NuGet contract independently of Gateway, Identity, or any private host.
 - [ ] Adoption in Gateway and Identity is tracked separately and does not block the public SDK release.
