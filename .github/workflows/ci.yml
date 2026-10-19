@@ -115,6 +115,10 @@ jobs:
                       --version "${{ steps.version.outputs.version }}" \
                       --source-sha "$GITHUB_SHA" \
                       --directory artifacts/nuget
+                  python eng/verify_artifact_manifest.py \
+                      --version "${{ steps.version.outputs.version }}" \
+                      --source-sha "$GITHUB_SHA" \
+                      --directory artifacts/nuget
 
             - name: Validate SourceLink provenance (Linux)
               if: runner.os == 'Linux'
