@@ -116,6 +116,20 @@ jobs:
                       --source-sha "$GITHUB_SHA" \
                       --directory artifacts/nuget
 
+            - name: Validate SourceLink provenance (Linux)
+              if: runner.os == 'Linux'
+              shell: bash
+              run: |
+                  dotnet run \
+                      --project eng/fixtures/SourceLinkProbe/SourceLinkProbe.csproj \
+                      --configuration Release \
+                      --no-launch-profile \
+                      -- \
+                      artifacts/nuget \
+                      "${{ steps.version.outputs.version }}" \
+                      "$GITHUB_SHA" \
+                      "$PWD"
+
             - name: Upload NuGet validation artifacts
               if: runner.os == 'Linux'
               uses: actions/upload-artifact@v7

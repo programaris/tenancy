@@ -210,6 +210,31 @@ namespace Programaris.Tenancy.AspNetCore.Tests
         }
 
         [Fact]
+        public async Task TenantHeaderOnOptionalEndpointStillSetsContext()
+        {
+            await using var app = await CreateAppAsync();
+            using var client = app.GetTestClient();
+            using var request = new HttpRequestMessage(HttpMethod.Get, "/v1/optional");
+
+            request.Headers.Add("X-Tenant", "programaris");
+
+            using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.True(await ReadBooleanPropertyAsync(response, "hasTenant"));
+        }
+
+        [Fact]
+        public void OutboundPropagationRequiresAnEstablishedTenant()
+        {
+            var accessor = new TenantContextAccessor();
+            using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.invalid/");
+
+            Assert.Throws<TenantContextUnavailableException>(() => request.AddProgramarisTenant(accessor));
+            Assert.False(request.Headers.Contains("X-Tenant"));
+        }
+
+        [Fact]
         public void ExplicitOutboundPropagationDoesNotReplaceExistingHeader()
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.invalid/");
