@@ -18,7 +18,7 @@ dotnet test Programaris.Tenancy.slnx --configuration Release --no-restore
 ```bash
 dotnet run --project samples/Programaris.Tenancy.Sample.API
 curl -i -H 'X-Tenant: programaris' http://localhost:5001/v1/tenant
-curl -i -H 'X-Tenant: dibs' http://localhost:5001/v1/tenant
+curl -i -H 'X-Tenant: acme' http://localhost:5001/v1/tenant
 curl -i http://localhost:5001/health
 curl -i http://localhost:5001/v1/tenant
 ```

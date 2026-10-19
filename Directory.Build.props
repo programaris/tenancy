@@ -24,6 +24,7 @@
         <PackageTags>programaris;tenancy;multi-tenant;dotnet;sdk</PackageTags>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>programaris-icon.png</PackageIcon>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <IncludeSymbols>true</IncludeSymbols>
@@ -31,5 +32,13 @@
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     </PropertyGroup>
+
+    <ItemGroup Condition="'$(MSBuildProjectName)' == 'Programaris.Tenancy.Abstractions'
+               Or '$(MSBuildProjectName)' == 'Programaris.Tenancy'
+               Or '$(MSBuildProjectName)' == 'Programaris.Tenancy.AspNetCore'">
+
+        <None Include="$(MSBuildThisFileDirectory)assets\programaris-icon.png" Pack="true" PackagePath="/" />
+
+    </ItemGroup>
 
 </Project>
