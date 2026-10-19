@@ -30,6 +30,9 @@
   <Folder Name="/docs/reference/">
     <File Path="docs/reference/http-contract.md" />
   </Folder>
+  <Folder Name="/docs/releases/">
+    <File Path="docs/releases/v0.1.0.md" />
+  </Folder>
   <Folder Name="/docs/security/">
     <File Path="docs/security/trust-boundaries.md" />
   </Folder>

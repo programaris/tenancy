@@ -12,5 +12,6 @@
 - [PRF integration](prf-integration.md) — build-version and package manifest alignment.
 - [Release policy](release-policy.md) — versioning and promotion.
 - [Release checklist](release-checklist.md) — requirements before `v0.1.0`.
+- [v0.1.0 certification record](releases/v0.1.0.md) — evidence register and remaining release gates.
 
 This documentation describes the source preview and its intended v0.1.0 feature scope. A stable release must pass the checklist and publish matching packages.
