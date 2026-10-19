@@ -106,7 +106,7 @@ jobs:
 
             - name: Upload NuGet validation artifacts
               if: runner.os == 'Linux'
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: tenancy-nuget-${{ steps.version.outputs.version }}
                   path: |
