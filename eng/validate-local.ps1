@@ -94,7 +94,8 @@ try
     Invoke-Checked "Isolated NuGet consumer" {
         python eng/smoke_consumer.py `
             --version $Version `
-            --directory $Output
+            --directory $Output `
+            --framework net10.0
     }
 
     Write-Host "`nLocal validation passed: $Version"

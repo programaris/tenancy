@@ -10,6 +10,8 @@ All notable changes are recorded here. The project follows [Semantic Versioning]
 - HTTP `X-Tenant` selection, optional-route metadata and request-scoped tenant accessor.
 - Explicit downstream HTTP propagation helper.
 - Input and concurrency regression tests.
+- .NET 8 isolated consumer certification for the portable NuGet assemblies.
+- Strict NuGet package metadata, dependency and portable symbol checks.
 - GitHub-hosted cross-platform verification and three-package NuGet artifacts.
 - PRF-compatible synchronized versioning and package inventory validation.
 - Public getting-started, compatibility, security and release documentation.
