@@ -16,6 +16,6 @@ This public repository implements the **compatible version and NuGet package inv
 
 ## Release gating
 
-No workflow in this repository may call a private PRF checkout from untrusted PRs or execute forked code on a persistent self-hosted runner. A future separate publishing workflow must use protected environments, immutable release tags and OIDC Trusted Publishing to nuget.org. Establish that workflow only after the CI and end-to-end consumer smoke test succeed.
+No workflow in this repository may call a private PRF checkout from untrusted PRs or execute forked code on a persistent self-hosted runner. Configure the `nuget-production` GitHub environment and NuGet.org Trusted Publishing policy for `publish.yml`. The manual promotion workflow requires an approved tag, confirms successful tag CI, and never exposes publish credentials to untrusted PR jobs.
 
 The private PRF reference currently treats a complete multi-package publisher as an incremental capability. Do not describe this repository's preliminary CI as full PRF adoption or claim that `v0.1.0` has been released until verified publishing and package installation are complete.
