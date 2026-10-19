@@ -55,7 +55,9 @@ jobs:
           SHA="$(git rev-parse HEAD)"
           TAG_SHA="$(git rev-parse "refs/tags/${TAG}^{commit}")"
           test "$SHA" = "$TAG_SHA"
-          test "$SHA" = "$(git rev-parse origin/dev)"
+          # Allow a workflow-only recovery commit while preserving certified release source.
+          git merge-base --is-ancestor "$SHA" origin/dev
+          git diff --quiet "$SHA" origin/dev -- . ':(exclude).github/workflows/publish.yml'
           test "$(python -c 'import json; print(json.load(open("version.json"))["nextVersion"])')" = "0.1.0"
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "Release source verified: $SHA"
@@ -120,6 +122,7 @@ jobs:
             dotnet nuget push "artifacts/nuget/${id}.0.1.0.nupkg" \
               --source https://api.nuget.org/v3/index.json \
               --api-key "$NUGET_API_KEY" \
+              --skip-duplicate \
               --timeout 300
           done
 
