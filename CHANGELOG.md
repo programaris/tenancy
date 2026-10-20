@@ -4,7 +4,15 @@ All notable changes are recorded here. The project follows [Semantic Versioning]
 
 ## [Unreleased]
 
-No changes since the v0.1.0 baseline.
+### Added for v0.2.0 (development)
+
+- Public `ITenantStore` and `ITenantAccessValidator` contracts with explicit success, denial and outage states.
+- Scoped authorized tenant context and opt-in fail-closed ASP.NET Core validation.
+- `Programaris.Tenancy.Http` with explicit request capture, approved HTTPS origins, and outbound header validation.
+- Authorization, HTTP allowlist and concurrent isolation tests.
+- Four-package distribution with synchronized v0.2.0 versioning and SourceLink verification.
+
+**Not yet published.** The v0.1.0 contracts remain available and retain their original selection-only semantics.
 
 ## [0.1.0] — Prepared for stable publication
 

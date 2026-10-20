@@ -14,9 +14,15 @@ An inbound `X-Tenant` value is **untrusted input**. The SDK parses and carries i
 6. Remove externally supplied privileged/internal context headers at trust boundaries.
 7. Never treat a platform-owned tenant (e.g. `programaris`) as a supertenant.
 
+## v0.2 trusted validation and access
+
+The opt-in `ITenantStore` and `ITenantAccessValidator` are implemented by the host against trusted sources. The middleware rejects unavailable stores/validators without granting access, and exposes a separate `ITenantAuthorizationContextAccessor` only after successful checks. `ITenantContextAccessor.Current` remains **untrusted selection**; it must not be used as proof of membership.
+
+An explicit `AllowUnauthenticatedTenant()` endpoint still requires a real, active tenant but skips membership checks. Use it only for intentionally public resources. Real authorization rules and resource-level isolation stay in the host.
+
 ## HTTP propagation
 
-The helper does **not** automatically copy headers between requests. Call `AddProgramarisTenant` only when sending to a known, approved downstream endpoint. A receiving service still has to perform the checks above; network location and `X-Tenant` alone are never proof of authorization.
+The helper does **not** automatically copy headers between requests. Call `AddProgramarisTenant` only when sending to a known, approved downstream endpoint. In v0.2.0, the new HttpClient helper accepts only explicitly allowed HTTPS origins, disables automatic redirects, and never reads an ambient tenant from pooled handlers. Do not override the configured primary transport handler to re-enable redirects. A receiving service still has to perform the checks above; network location and `X-Tenant` alone are never proof of authorization.
 
 ## Endpoint opt-out
 

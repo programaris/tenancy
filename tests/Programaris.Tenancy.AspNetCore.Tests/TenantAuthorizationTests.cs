@@ -81,6 +81,69 @@ namespace Programaris.Tenancy.AspNetCore.Tests
             Assert.Equal("none", await second.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         }
 
+        [Fact]
+        public async Task AuthenticatedMemberIsGrantedOnlyForItsTenant()
+        {
+            await using var app = await CreateAppAsync();
+            using var client = app.GetTestClient();
+            using var authorized = Request("programaris");
+            authorized.Headers.Add("X-Test-Principal", "alice");
+            using var granted = await client.SendAsync(authorized, TestContext.Current.CancellationToken);
+
+            using var deniedRequest = Request("programaris");
+            deniedRequest.Headers.Add("X-Test-Principal", "bob");
+            using var denied = await client.SendAsync(deniedRequest, TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.OK, granted.StatusCode);
+            Assert.Equal("programaris", await granted.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+            Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
+        }
+
+        [Fact]
+        public async Task AuthorizationProviderUnavailableFailsClosed()
+        {
+            await using var app = await CreateAppAsync();
+            using var client = app.GetTestClient();
+            using var request = Request("access-unavailable");
+            request.Headers.Add("X-Test-Principal", "alice");
+            using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task InactiveOrMismatchedStoreRecordsAreRejected()
+        {
+            await using var app = await CreateAppAsync();
+            using var client = app.GetTestClient();
+
+            foreach (string slug in new[] { "inactive", "mismatch" })
+            {
+                using var request = Request(slug);
+                request.RequestUri = new Uri("http://localhost/public");
+                using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+                Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+            }
+        }
+
+        [Fact]
+        public async Task ConcurrentAuthorizedAndDeniedRequestsAreIsolated()
+        {
+            await using var app = await CreateAppAsync();
+            using var client = app.GetTestClient();
+
+            Task[] requests = Enumerable.Range(0, 64).Select(async i =>
+            {
+                bool allowed = i % 2 == 0;
+                using var request = Request("programaris");
+                request.Headers.Add("X-Test-Principal", allowed ? "alice" : "bob");
+                using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+                Assert.Equal(allowed ? HttpStatusCode.OK : HttpStatusCode.Forbidden, response.StatusCode);
+            }).ToArray();
+
+            await Task.WhenAll(requests);
+        }
+
         private static HttpRequestMessage Request(string slug)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, "http://localhost/secure");
@@ -100,6 +163,19 @@ namespace Programaris.Tenancy.AspNetCore.Tests
             WebApplication app = builder.Build();
             app.UseRouting();
             app.UseProgramarisTenancy();
+            // Test-only authenticated principal injection; production consumers must use ASP.NET Core authentication.
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Headers.TryGetValue("X-Test-Principal", out var principalName))
+                {
+                    var identity = new ClaimsIdentity(
+                        new[] { new Claim(ClaimTypes.Name, principalName.ToString()) },
+                        "Test");
+                    context.User = new ClaimsPrincipal(identity);
+                }
+
+                await next(context);
+            });
             app.UseProgramarisTenantAuthorization();
             app.MapGet("/secure", (ITenantAuthorizationContextAccessor context) =>
                 Results.Text(context.Current?.Slug ?? "none"));
@@ -118,6 +194,9 @@ namespace Programaris.Tenancy.AspNetCore.Tests
                 TenantValidationResult result = slug switch
                 {
                     "programaris" => TenantValidationResult.Found(new TenantContext(slug)),
+                    "access-unavailable" => TenantValidationResult.Found(new TenantContext(slug)),
+                    "inactive" => TenantValidationResult.Inactive(),
+                    "mismatch" => TenantValidationResult.Found(new TenantContext("programaris")),
                     "unavailable" => TenantValidationResult.Unavailable(),
                     _ => TenantValidationResult.NotFound()
                 };
@@ -130,7 +209,15 @@ namespace Programaris.Tenancy.AspNetCore.Tests
         {
             public Task<TenantAccessResult> ValidateAsync(TenantAccessRequest request, CancellationToken cancellationToken = default)
             {
-                return Task.FromResult(TenantAccessResult.Denied());
+                if (request.TenantSlug == "access-unavailable")
+                {
+                    return Task.FromResult(TenantAccessResult.Unavailable());
+                }
+
+                return Task.FromResult(
+                    request.TenantSlug == "programaris" && request.Principal.Identity?.Name == "alice"
+                        ? TenantAccessResult.Granted()
+                        : TenantAccessResult.Denied());
             }
         }
     }
