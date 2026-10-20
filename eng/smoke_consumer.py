@@ -5,6 +5,7 @@ import argparse
 import os
 import subprocess
 import tempfile
+import xml.etree.ElementTree as ET
 
 from pathlib import Path
 
@@ -113,6 +114,15 @@ def run_command(command, environment):
     )
 
 
+def write_nuget_config(path, local_feed):
+    root = ET.Element("configuration")
+    sources = ET.SubElement(root, "packageSources")
+    ET.SubElement(sources, "clear")
+    ET.SubElement(sources, "add", {"key": "local", "value": str(local_feed)})
+    ET.SubElement(sources, "add", {"key": "nuget.org", "value": "https://api.nuget.org/v3/index.json"})
+    ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
+
+
 def validate_packages(directory, version):
     if not directory.is_dir():
         raise FileNotFoundError(
@@ -185,9 +195,11 @@ def main():
 
         (work / "Program.cs").write_text(program, encoding="utf-8")
 
+        config = work / "NuGet.Config"
+        write_nuget_config(config, local_feed)
+
         run_command(
-            ["dotnet", "restore", str(project), "--source", str(local_feed),
-             "--source", "https://api.nuget.org/v3/index.json"],
+            ["dotnet", "restore", str(project), "--configfile", str(config)],
             environment,
         )
 
