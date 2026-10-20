@@ -5,6 +5,7 @@ namespace Programaris.Tenancy.AspNetCore
     /// <summary>Scoped, single-assignment authorization context.</summary>
     public sealed class TenantAuthorizationContextAccessor : ITenantAuthorizationContextAccessor
     {
+        /// <summary>Configures or provides tenant-aware HTTP integration.</summary>
         public TenantContext? Current { get; private set; }
 
         internal void Initialize(TenantContext context)

@@ -11,11 +11,13 @@ namespace Programaris.Tenancy.AspNetCore
     {
         private readonly RequestDelegate _Next;
 
+        /// <summary>Configures or provides tenant-aware HTTP integration.</summary>
         public TenantAuthorizationMiddleware(RequestDelegate next)
         {
             _Next = next ?? throw new ArgumentNullException(nameof(next));
         }
 
+        /// <summary>Configures or provides tenant-aware HTTP integration.</summary>
         public async Task InvokeAsync(
             HttpContext context,
             ITenantContextAccessor selection,

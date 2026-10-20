@@ -7,6 +7,7 @@ namespace Programaris.Tenancy.Http
     /// <summary>Explicitly captures the selected tenant on the outbound request, never inside a pooled handler.</summary>
     public static class TenantHttpRequestExtensions
     {
+        /// <summary>Configures or provides tenant-aware HTTP integration.</summary>
         public static HttpRequestMessage WithProgramarisTenant(
             this HttpRequestMessage request,
             TenantContext tenant,
@@ -34,6 +35,7 @@ namespace Programaris.Tenancy.Http
             return request;
         }
 
+        /// <summary>Configures or provides tenant-aware HTTP integration.</summary>
         public static HttpRequestMessage WithProgramarisTenant(
             this HttpRequestMessage request,
             ITenantContextAccessor accessor,

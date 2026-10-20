@@ -7,6 +7,7 @@ namespace Programaris.Tenancy.Http
     /// <summary>Registers tenant-aware outbound requests with an origin allowlist and redirects disabled.</summary>
     public static class ProgramarisTenancyHttpExtensions
     {
+        /// <summary>Configures or provides tenant-aware HTTP integration.</summary>
         public static IHttpClientBuilder AddProgramarisTenancyHttp(
             this IHttpClientBuilder builder,
             Action<TenantHttpClientOptions> configure)

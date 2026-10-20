@@ -9,6 +9,7 @@ namespace Programaris.Tenancy.Http
     {
         private readonly TenantHttpClientOptions _Options;
 
+        /// <summary>Configures or provides tenant-aware HTTP integration.</summary>
         public TenantPropagationHandler(IOptions<TenantHttpClientOptions> options)
         {
             ArgumentNullException.ThrowIfNull(options);
