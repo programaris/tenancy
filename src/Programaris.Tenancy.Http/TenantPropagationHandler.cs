@@ -16,6 +16,7 @@ namespace Programaris.Tenancy.Http
             _Options = options.Value;
         }
 
+        /// <summary>Checks outbound destination and tenant header before forwarding the request.</summary>
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
