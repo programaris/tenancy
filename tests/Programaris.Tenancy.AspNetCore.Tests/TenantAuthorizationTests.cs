@@ -113,7 +113,7 @@ namespace Programaris.Tenancy.AspNetCore.Tests
 
         private sealed class StubTenantStore : ITenantStore
         {
-            public ValueTask<TenantValidationResult> FindAsync(string slug, CancellationToken cancellationToken = default)
+            public Task<TenantValidationResult> FindAsync(string slug, CancellationToken cancellationToken = default)
             {
                 TenantValidationResult result = slug switch
                 {
@@ -122,15 +122,15 @@ namespace Programaris.Tenancy.AspNetCore.Tests
                     _ => TenantValidationResult.NotFound()
                 };
 
-                return new ValueTask<TenantValidationResult>(result);
+                return Task.FromResult(result);
             }
         }
 
         private sealed class DenyAccessValidator : ITenantAccessValidator
         {
-            public ValueTask<TenantAccessResult> ValidateAsync(TenantAccessRequest request, CancellationToken cancellationToken = default)
+            public Task<TenantAccessResult> ValidateAsync(TenantAccessRequest request, CancellationToken cancellationToken = default)
             {
-                return new ValueTask<TenantAccessResult>(TenantAccessResult.Denied());
+                return Task.FromResult(TenantAccessResult.Denied());
             }
         }
     }
