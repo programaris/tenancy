@@ -9,6 +9,7 @@ namespace Programaris.Tenancy.Http
         private readonly string _HeaderName;
         private readonly HashSet<string> _AllowedOrigins;
 
+        /// <summary>Builds a reusable HTTP handler with an immutable destination policy.</summary>
         public TenantPropagationHandler(TenantHttpClientOptions options)
         {
             ArgumentNullException.ThrowIfNull(options);

@@ -17,12 +17,14 @@ namespace Programaris.Tenancy.AspNetCore
         private readonly RequestDelegate _Next;
         private readonly ILogger<TenantProtectionMiddleware> _Logger;
 
+        /// <summary>Provides a public tenant integration contract.</summary>
         public TenantProtectionMiddleware(RequestDelegate next, ILogger<TenantProtectionMiddleware> logger)
         {
             _Next = next ?? throw new ArgumentNullException(nameof(next));
             _Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        /// <summary>Checks the selected tenant and principal before endpoint execution.</summary>
         public async Task InvokeAsync(
             HttpContext context,
             ITenantContextAccessor selected,
