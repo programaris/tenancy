@@ -21,8 +21,8 @@ def main():
 
     files = sorted([*directory.glob("*.nupkg"), *directory.glob("*.snupkg")])
 
-    if len(files) != 6:
-        parser.error(f"expected six package artifacts (found {len(files)})")
+    if len(files) != 8:
+        parser.error(f"expected eight package artifacts (found {len(files)})")
     manifest = {
         "schemaVersion": 1,
         "sourceSha": args.source_sha.lower(),

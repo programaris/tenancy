@@ -3,6 +3,7 @@
     <Project Path="src/Programaris.Tenancy.Abstractions/Programaris.Tenancy.Abstractions.csproj" />
     <Project Path="src/Programaris.Tenancy.AspNetCore/Programaris.Tenancy.AspNetCore.csproj" />
     <Project Path="src/Programaris.Tenancy/Programaris.Tenancy.csproj" />
+    <Project Path="src/Programaris.Tenancy.Http/Programaris.Tenancy.Http.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Programaris.Tenancy.AspNetCore.Tests/Programaris.Tenancy.AspNetCore.Tests.csproj" />

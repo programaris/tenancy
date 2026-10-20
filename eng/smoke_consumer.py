@@ -13,6 +13,7 @@ PACKAGES = (
     "Programaris.Tenancy.Abstractions",
     "Programaris.Tenancy",
     "Programaris.Tenancy.AspNetCore",
+    "Programaris.Tenancy.Http",
 )
 
 

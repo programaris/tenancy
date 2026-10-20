@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate six immutable NuGet artifacts against their SHA-256 manifest."""
+"""Validate eight immutable NuGet artifacts against their SHA-256 manifest."""
 
 import argparse
 import hashlib
@@ -7,7 +7,7 @@ import json
 import re
 from pathlib import Path
 
-PACKAGES = ("Programaris.Tenancy.Abstractions", "Programaris.Tenancy", "Programaris.Tenancy.AspNetCore")
+PACKAGES = ("Programaris.Tenancy.Abstractions", "Programaris.Tenancy", "Programaris.Tenancy.AspNetCore", "Programaris.Tenancy.Http")
 
 
 def verify_manifest(directory, version, source_sha):
@@ -23,12 +23,12 @@ def verify_manifest(directory, version, source_sha):
     actual = {path.name for pattern in ("*.nupkg", "*.snupkg") for path in directory.glob(pattern)}
     entries = manifest.get("artifacts")
 
-    if actual != expected or not isinstance(entries, list) or len(entries) != 6:
+    if actual != expected or not isinstance(entries, list) or len(entries) != 8:
         raise ValueError("Invalid release package inventory")
 
     recorded = [item.get("filename") for item in entries]
 
-    if set(recorded) != expected or len(set(recorded)) != 6:
+    if set(recorded) != expected or len(set(recorded)) != 8:
         raise ValueError("Invalid or duplicate manifest filenames")
 
     for entry in entries:
@@ -43,7 +43,7 @@ def verify_manifest(directory, version, source_sha):
         if observed != digest.lower():
             raise ValueError(f"SHA-256 mismatch: {name}")
 
-    print(f"Six NuGet artifacts verified for {version} ({source_sha})")
+    print(f"Eight NuGet artifacts verified for {version} ({source_sha})")
 
 
 def main():
