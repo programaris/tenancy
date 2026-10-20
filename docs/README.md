@@ -6,6 +6,9 @@
 - [Tenant context](concepts/tenant-context.md) — accessor contract and scope.
 - [HTTP contract](reference/http-contract.md) — header rules and problem responses.
 - [Tenant trust model v0.2.0](architecture/tenant-trust-model-v0.2.0.md) — selection, validation, and authorization.
+- [Public API additions v0.2.0](reference/public-api-v0.2.0.md) — endpoint sources, validated/authorized contexts and failure policy.
+- [Identity integration contract v0.2.0](integrations/identity-v0.2.0.md) — adapters, OIDC and signup certification.
+- [ADR-0004](adr/0004-identity-ready-tenant-selection.md) — endpoint-scoped sources and trust states.
 - [Outbound HTTP v0.2.0](getting-started-http-v0.2.0.md) — restricted propagation and handler lifetime precautions.
 - [v0.2.0 development notes](releases/v0.2.0-development.md) — current scope and certification requirements.
 - [Public API v0.1.0](reference/public-api-v0.1.0.md) — signatures and compatibility guarantees.

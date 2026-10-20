@@ -1,29 +1,32 @@
-using System.Text.Json;
-
 using Microsoft.AspNetCore.Http;
 
 using Programaris.Tenancy.Abstractions;
 
 namespace Programaris.Tenancy.AspNetCore
 {
-    /// <summary>Validates selected tenant and principal access using independently provided trust sources.</summary>
+    /// <summary>Validates a selected tenant against trusted sources, then enforces principal access when required.</summary>
     public sealed class TenantAuthorizationMiddleware
     {
         private readonly RequestDelegate _Next;
 
-        /// <summary>Configures or provides tenant-aware HTTP integration.</summary>
+        /// <summary>Creates authorization middleware.</summary>
         public TenantAuthorizationMiddleware(RequestDelegate next)
         {
             _Next = next ?? throw new ArgumentNullException(nameof(next));
         }
 
-        /// <summary>Configures or provides tenant-aware HTTP integration.</summary>
+        /// <summary>
+        /// For protected endpoints, authentication is verified before tenant existence is queried.
+        /// Public tenant endpoints only obtain validated context, never authorized context.
+        /// </summary>
         public async Task InvokeAsync(
             HttpContext context,
             ITenantContextAccessor selection,
             ITenantStore store,
             ITenantAccessValidator validator,
-            TenantAuthorizationContextAccessor authorized)
+            TenantValidationContextAccessor validated,
+            TenantAuthorizationContextAccessor authorized,
+            ITenantFailureResponseWriter failures)
         {
             ArgumentNullException.ThrowIfNull(context);
 
@@ -38,7 +41,15 @@ namespace Programaris.Tenancy.AspNetCore
                     return;
                 }
 
-                await ProblemAsync(context, StatusCodes.Status400BadRequest, "tenant_header_missing");
+                await failures.WriteAsync(context, TenantFailureKind.MissingTenant);
+                return;
+            }
+
+            bool publicTenant = context.GetEndpoint()?.Metadata.GetMetadata<AllowUnauthenticatedTenantMetadata>() is not null;
+
+            if (!publicTenant && context.User.Identity?.IsAuthenticated != true)
+            {
+                await failures.WriteAsync(context, TenantFailureKind.AuthenticationRequired);
                 return;
             }
 
@@ -54,81 +65,77 @@ namespace Programaris.Tenancy.AspNetCore
             }
             catch (Exception)
             {
-                await ProblemAsync(context, StatusCodes.Status503ServiceUnavailable, "tenant_registry_unavailable");
+                await failures.WriteAsync(context, TenantFailureKind.RegistryUnavailable);
                 return;
             }
 
             if (result is null || result.Status == TenantValidationStatus.Unavailable)
             {
-                await ProblemAsync(context, StatusCodes.Status503ServiceUnavailable, "tenant_registry_unavailable");
+                await failures.WriteAsync(context, TenantFailureKind.RegistryUnavailable);
                 return;
             }
 
             if (!result.IsValid || result.Tenant is null ||
                 !string.Equals(result.Tenant.Slug, requested.Slug, StringComparison.Ordinal))
             {
-                await ProblemAsync(context, StatusCodes.Status404NotFound, "tenant_not_found");
+                await failures.WriteAsync(context, TenantFailureKind.NotFoundOrInactive);
                 return;
             }
 
-            bool publicTenant = context.GetEndpoint()?.Metadata.GetMetadata<AllowUnauthenticatedTenantMetadata>() is not null;
-
-            if (!publicTenant)
+            if (result.Tenant.TenantId == Guid.Empty)
             {
-                if (context.User.Identity?.IsAuthenticated != true)
-                {
-                    await ProblemAsync(context, StatusCodes.Status401Unauthorized, "tenant_authentication_required");
-                    return;
-                }
+                await failures.WriteAsync(context, TenantFailureKind.RegistryUnavailable);
+                return;
+            }
 
-                TenantAccessResult access;
+            validated.Initialize(result.Tenant);
 
-                try
-                {
-                    access = await validator.ValidateAsync(
-                        new TenantAccessRequest(
-                            requested.Slug,
-                            context.User,
-                            context.GetEndpoint()?.Metadata.GetMetadata<TenantOperationMetadata>()?.Operation),
-                        context.RequestAborted);
-                }
-                catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
-                {
-                    throw;
-                }
-                catch (Exception)
-                {
-                    await ProblemAsync(context, StatusCodes.Status503ServiceUnavailable, "tenant_authorization_unavailable");
-                    return;
-                }
+            if (publicTenant)
+            {
+                await _Next(context);
+                return;
+            }
 
-                if (access is null || access.Status == TenantAccessStatus.Unavailable)
-                {
-                    await ProblemAsync(context, StatusCodes.Status503ServiceUnavailable, "tenant_authorization_unavailable");
-                    return;
-                }
+            TenantAccessResult access;
 
-                if (!access.IsGranted)
-                {
-                    int status = access.Status == TenantAccessStatus.Unauthenticated
-                        ? StatusCodes.Status401Unauthorized
-                        : StatusCodes.Status403Forbidden;
-                    await ProblemAsync(context, status, "tenant_access_denied");
-                    return;
-                }
+            try
+            {
+                access = await validator.ValidateAsync(
+                    new TenantAccessRequest(
+                        requested.Slug,
+                        context.User,
+                        context.GetEndpoint()?.Metadata.GetMetadata<TenantOperationMetadata>()?.Operation,
+                        result.Tenant.TenantId),
+                    context.RequestAborted);
+            }
+            catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception)
+            {
+                await failures.WriteAsync(context, TenantFailureKind.AuthorizationUnavailable);
+                return;
+            }
+
+            if (access is null || access.Status == TenantAccessStatus.Unavailable)
+            {
+                await failures.WriteAsync(context, TenantFailureKind.AuthorizationUnavailable);
+                return;
+            }
+
+            if (!access.IsGranted)
+            {
+                await failures.WriteAsync(
+                    context,
+                    access.Status == TenantAccessStatus.Unauthenticated
+                        ? TenantFailureKind.AuthenticationRequired
+                        : TenantFailureKind.AccessDenied);
+                return;
             }
 
             authorized.Initialize(result.Tenant);
             await _Next(context);
-        }
-
-        private static Task ProblemAsync(HttpContext context, int status, string code)
-        {
-            context.Response.StatusCode = status;
-            context.Response.ContentType = "application/problem+json";
-            return context.Response.WriteAsync(
-                JsonSerializer.Serialize(new { type = "about:blank", title = code, status, code }),
-                context.RequestAborted);
         }
     }
 }

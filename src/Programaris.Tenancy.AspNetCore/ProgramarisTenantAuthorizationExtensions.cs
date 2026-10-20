@@ -14,6 +14,10 @@ namespace Programaris.Tenancy.AspNetCore
         {
             ArgumentNullException.ThrowIfNull(services);
 
+            services.TryAddScoped<TenantValidationContextAccessor>();
+            services.TryAddScoped<ITenantValidationContextAccessor>(
+                provider => provider.GetRequiredService<TenantValidationContextAccessor>());
+            services.TryAddSingleton<ITenantFailureResponseWriter, DefaultTenantFailureResponseWriter>();
             services.TryAddScoped<TenantAuthorizationContextAccessor>();
             services.TryAddScoped<ITenantAuthorizationContextAccessor>(
                 provider => provider.GetRequiredService<TenantAuthorizationContextAccessor>());
@@ -33,6 +37,18 @@ namespace Programaris.Tenancy.AspNetCore
         {
             ArgumentNullException.ThrowIfNull(builder);
             builder.WithMetadata(new TenantOperationMetadata(operation));
+            return builder;
+        }
+
+        /// <summary>
+        /// On explicitly public tenant routes, present missing/inactive tenants as a generic 403 denial.
+        /// Host business restrictions must use the same response and separately prevent enumeration.
+        /// </summary>
+        public static TBuilder UseGenericTenantFailures<TBuilder>(this TBuilder builder)
+            where TBuilder : IEndpointConventionBuilder
+        {
+            ArgumentNullException.ThrowIfNull(builder);
+            builder.WithMetadata(new GenericTenantFailureMetadata());
             return builder;
         }
 

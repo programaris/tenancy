@@ -18,7 +18,17 @@ An inbound `X-Tenant` value is **untrusted input**. The SDK parses and carries i
 
 The opt-in `ITenantStore` and `ITenantAccessValidator` are implemented by the host against trusted sources. The middleware rejects unavailable stores/validators without granting access, and exposes a separate `ITenantAuthorizationContextAccessor` only after successful checks. `ITenantContextAccessor.Current` remains **untrusted selection**; it must not be used as proof of membership.
 
-An explicit `AllowUnauthenticatedTenant()` endpoint still requires a real, active tenant but skips membership checks. Use it only for intentionally public resources. Real authorization rules and resource-level isolation stay in the host.
+An explicit `AllowUnauthenticatedTenant()` endpoint still requires a real, active tenant but skips membership checks. It sets **only** `ITenantValidationContextAccessor.Current`, never `ITenantAuthorizationContextAccessor.Current`. Use it only for intentionally public resources. Real authorization rules and resource-level isolation stay in the host.
+
+## Browser selection and enumeration
+
+Non-header selection is permitted only through explicit per-endpoint host sources.
+The SDK checks duplicates and conflicts but cannot establish OIDC state, session
+binding, client authorization or safe redirects. The host must authenticate its
+sources. Protected requests authenticate before a registry query; protected
+missing/inactive and denied access share a default 403. Public endpoints may
+opt into generic 403 failures, or replace the response writer; neither mitigates
+timing attacks, user enumeration or signup abuse without host protection.
 
 ## HTTP propagation
 

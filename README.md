@@ -20,7 +20,9 @@ PROGRAMARIS uses its own services as a tenant. External consumers use the same p
 - Never infer a default tenant or disable tenant requirements globally; only explicit `AllowMissingTenant()` endpoints can omit a tenant.
 - Keep tenant **selection** separate from **authentication and authorization**.
 - v0.2.0: bring your own `ITenantStore` and `ITenantAccessValidator` provider implementations.
-- v0.2.0: opt-in ASP.NET Core middleware enforcing registry checks and authenticated access, failing closed when a source is unavailable.
+- v0.2.0: endpoint-scoped host selection sources for browser/OIDC flows; no automatic query/form trust.
+- v0.2.0: separate selected, registry-validated and authorized contexts; no membership grant from public validation.
+- v0.2.0: opt-in ASP.NET Core middleware with anonymous non-enumeration and host-overridable failure policy.
 - v0.2.0: opt-in named HttpClient package with exact-origin HTTPS restrictions, disabled redirects, and explicit per-request context capture.
 
 ### Not provided
@@ -81,7 +83,7 @@ app.MapGet("/v1/tenant", (ITenantContextAccessor tenants) =>
     Results.Ok(new { slug = tenants.GetRequired().Slug }));
 ```
 
-This preserves the v0.1.0 selection-only flow. To enforce tenant access, register your own `ITenantStore` and `ITenantAccessValidator` (for example, Identity-backed adapters), call `AddProgramarisTenantAuthorization()`, and place `UseProgramarisTenantAuthorization()` **after** routing, tenant resolution, and authentication but **before** endpoint execution. Consumers may inspect `ITenantAuthorizationContextAccessor.Current` only after a grant. `AllowUnauthenticatedTenant()` explicitly skips membership authorization for an endpoint but still validates tenant existence. `AllowMissingTenant()` permits tenant-less endpoints without authorizing any tenant.
+This preserves the v0.1.0 selection-only flow. To enforce tenant access, register your own `ITenantStore` and `ITenantAccessValidator` (for example, Identity-backed adapters), call `AddProgramarisTenantAuthorization()`, and place `UseProgramarisTenantAuthorization()` **after** routing, tenant resolution, and authentication but **before** endpoint execution. Consumers may inspect `ITenantValidationContextAccessor.Current` after registry validation; `ITenantAuthorizationContextAccessor.Current` exists only after an authenticated grant. Browser-selected sources must opt in per endpoint via `UseProgramarisTenantSelectionSource<TSource>()`. `AllowUnauthenticatedTenant()` explicitly skips membership authorization for an endpoint but still validates tenant existence. `AllowMissingTenant()` permits tenant-less endpoints without authorizing any tenant.
 
 ## Outbound propagation (explicit)
 
