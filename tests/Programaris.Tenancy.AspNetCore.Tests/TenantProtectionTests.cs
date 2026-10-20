@@ -194,7 +194,7 @@ namespace Programaris.Tenancy.AspNetCore.Tests
 
         private sealed class FakeStore : ITenantStore
         {
-            public ValueTask<TenantValidationResult> FindAsync(string tenantSlug, CancellationToken cancellationToken = default)
+            public Task<TenantValidationResult> FindAsync(string tenantSlug, CancellationToken cancellationToken = default)
             {
                 if (tenantSlug == "throw-store")
                 {
@@ -210,13 +210,13 @@ namespace Programaris.Tenancy.AspNetCore.Tests
                     _ => TenantValidationResult.Active(new TenantContext(tenantSlug, TenantId))
                 };
 
-                return new ValueTask<TenantValidationResult>(result);
+                return new Task<TenantValidationResult>(result);
             }
         }
 
         private sealed class FakeValidator : ITenantAccessValidator
         {
-            public ValueTask<TenantAccessResult> ValidateAsync(TenantAccessRequest request, CancellationToken cancellationToken = default)
+            public Task<TenantAccessResult> ValidateAsync(TenantAccessRequest request, CancellationToken cancellationToken = default)
             {
                 if (request.TenantSlug == "throw-validator")
                 {
@@ -230,7 +230,7 @@ namespace Programaris.Tenancy.AspNetCore.Tests
                     _ => TenantAccessResult.Allowed()
                 };
 
-                return new ValueTask<TenantAccessResult>(result);
+                return new Task<TenantAccessResult>(result);
             }
         }
     }

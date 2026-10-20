@@ -6,6 +6,6 @@ namespace Programaris.Tenancy.Abstractions
     public interface ITenantAccessValidator
     {
         /// <summary>Evaluates tenant membership/access. Must never infer access from X-Tenant alone.</summary>
-        ValueTask<TenantAccessResult> ValidateAsync(TenantAccessRequest request, CancellationToken cancellationToken = default);
+        Task<TenantAccessResult> ValidateAsync(TenantAccessRequest request, CancellationToken cancellationToken = default);
     }
 }

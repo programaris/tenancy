@@ -6,6 +6,6 @@ namespace Programaris.Tenancy.Abstractions
     public interface ITenantStore
     {
         /// <summary>Looks up the canonical tenant slug. Infrastructure failures must return Unavailable or throw.</summary>
-        ValueTask<TenantValidationResult> FindAsync(string tenantSlug, CancellationToken cancellationToken = default);
+        Task<TenantValidationResult> FindAsync(string tenantSlug, CancellationToken cancellationToken = default);
     }
 }
