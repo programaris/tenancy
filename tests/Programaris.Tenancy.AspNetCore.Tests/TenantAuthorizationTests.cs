@@ -100,6 +100,26 @@ namespace Programaris.Tenancy.AspNetCore.Tests
         }
 
         [Fact]
+        public async Task EndpointOperationIsPassedToTrustedValidator()
+        {
+            await using var app = await CreateAppAsync();
+            using var client = app.GetTestClient();
+
+            using var allowedRequest = Request("programaris");
+            allowedRequest.RequestUri = new Uri("http://localhost/secure-operation");
+            allowedRequest.Headers.Add("X-Test-Principal", "alice");
+            using var allowed = await client.SendAsync(allowedRequest, TestContext.Current.CancellationToken);
+
+            using var deniedRequest = Request("programaris");
+            deniedRequest.RequestUri = new Uri("http://localhost/secure-operation-denied");
+            deniedRequest.Headers.Add("X-Test-Principal", "alice");
+            using var denied = await client.SendAsync(deniedRequest, TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.OK, allowed.StatusCode);
+            Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
+        }
+
+        [Fact]
         public async Task AuthorizationProviderUnavailableFailsClosed()
         {
             await using var app = await CreateAppAsync();
@@ -179,6 +199,10 @@ namespace Programaris.Tenancy.AspNetCore.Tests
             app.UseProgramarisTenantAuthorization();
             app.MapGet("/secure", (ITenantAuthorizationContextAccessor context) =>
                 Results.Text(context.Current?.Slug ?? "none"));
+            app.MapGet("/secure-operation", () => Results.Ok())
+                .RequireProgramarisTenantOperation("profile.read");
+            app.MapGet("/secure-operation-denied", () => Results.Ok())
+                .RequireProgramarisTenantOperation("profile.delete");
             app.MapGet("/public", (ITenantAuthorizationContextAccessor context) =>
                 Results.Text(context.Current?.Slug ?? "none")).AllowUnauthenticatedTenant();
             app.MapGet("/health", (ITenantAuthorizationContextAccessor context) =>
@@ -215,7 +239,9 @@ namespace Programaris.Tenancy.AspNetCore.Tests
                 }
 
                 return Task.FromResult(
-                    request.TenantSlug == "programaris" && request.Principal.Identity?.Name == "alice"
+                    request.TenantSlug == "programaris" &&
+                    request.Principal.Identity?.Name == "alice" &&
+                    (request.Operation is null || request.Operation == "profile.read")
                         ? TenantAccessResult.Granted()
                         : TenantAccessResult.Denied());
             }
