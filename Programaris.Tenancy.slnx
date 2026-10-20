@@ -8,6 +8,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/Programaris.Tenancy.AspNetCore.Tests/Programaris.Tenancy.AspNetCore.Tests.csproj" />
     <Project Path="tests/Programaris.Tenancy.Tests/Programaris.Tenancy.Tests.csproj" />
+    <Project Path="tests/Programaris.Tenancy.Http.Tests/Programaris.Tenancy.Http.Tests.csproj" />
   </Folder>
   <Folder Name="/assets/" />
   <Folder Name="/docs/">
