@@ -47,6 +47,54 @@ namespace Programaris.Tenancy.Http.Tests
                 () => client.SendAsync(request, TestContext.Current.CancellationToken));
         }
 
+        [Theory]
+        [InlineData("https://user@identity.programaris.com.br/v1/users")]
+        [InlineData("https://user:password@identity.programaris.com.br/v1/users")]
+        public async Task CredentialedDestinationsAreRejected(string destination)
+        {
+            using var client = CreateClient(TenantPropagationMode.Required);
+            using var request = new HttpRequestMessage(HttpMethod.Get, destination);
+            request.WithProgramarisTenant(new TenantContext("programaris"));
+
+            await Assert.ThrowsAsync<TenantPropagationException>(
+                () => client.SendAsync(request, TestContext.Current.CancellationToken));
+        }
+
+        [Fact]
+        public void ConfigurationRequiresExactHttpsOrigins()
+        {
+            var missing = new TenantHttpClientOptions();
+            Assert.Throws<ArgumentException>(() => new TenantPropagationHandler(Options.Create(missing)));
+
+            var insecure = new TenantHttpClientOptions();
+            insecure.AllowedOrigins.Add(new Uri("http://identity.programaris.com.br"));
+            Assert.Throws<ArgumentException>(() => new TenantPropagationHandler(Options.Create(insecure)));
+
+            var path = new TenantHttpClientOptions();
+            path.AllowedOrigins.Add(new Uri("https://identity.programaris.com.br/v1/"));
+            Assert.Throws<ArgumentException>(() => new TenantPropagationHandler(Options.Create(path)));
+        }
+
+        [Fact]
+        public async Task PreexistingValidTenantHeaderIsRejected()
+        {
+            using var client = CreateClient(TenantPropagationMode.Optional);
+            using var request = new HttpRequestMessage(HttpMethod.Get, "https://identity.programaris.com.br/");
+            request.Headers.Add("X-Tenant", "programaris");
+
+            await Assert.ThrowsAsync<TenantPropagationException>(
+                () => client.SendAsync(request, TestContext.Current.CancellationToken));
+        }
+
+        [Fact]
+        public void TenantHeaderIsInjectedOnlyAfterDestinationValidation()
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, "https://identity.programaris.com.br/");
+            request.WithProgramarisTenant(new TenantContext("programaris"));
+
+            Assert.False(request.Headers.Contains("X-Tenant"));
+        }
+
         [Fact]
         public async Task InvalidTenantHeaderFailsBeforeSending()
         {

@@ -4,61 +4,105 @@ using Microsoft.Extensions.Options;
 
 namespace Programaris.Tenancy.Http
 {
-    /// <summary>Restricts tenant propagation to approved HTTPS origins without sharing request-scoped tenant state.</summary>
+    /// <summary>Enforces exact HTTPS origins and request-bound tenant injection.</summary>
     public sealed class TenantPropagationHandler : DelegatingHandler
     {
-        private readonly TenantHttpClientOptions _Options;
+        private readonly TenantPropagationMode _Mode;
+        private readonly string _HeaderName;
+        private readonly HashSet<string> _AllowedOrigins;
 
-        /// <summary>Configures or provides tenant-aware HTTP integration.</summary>
+        /// <summary>Validates and snapshots the outbound forwarding policy.</summary>
         public TenantPropagationHandler(IOptions<TenantHttpClientOptions> options)
         {
             ArgumentNullException.ThrowIfNull(options);
-            _Options = options.Value;
+            TenantHttpClientOptions policy = options.Value;
+
+            if (!Enum.IsDefined(policy.Mode))
+            {
+                throw new ArgumentException("Invalid tenant propagation mode.", nameof(options));
+            }
+
+            if (!TenantHttpRequestExtensions.IsValidHeaderName(policy.HeaderName))
+            {
+                throw new ArgumentException("Invalid tenant header name.", nameof(options));
+            }
+
+            _Mode = policy.Mode;
+            _HeaderName = policy.HeaderName;
+            _AllowedOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (Uri origin in policy.AllowedOrigins)
+            {
+                if (origin is null ||
+                    !origin.IsAbsoluteUri ||
+                    origin.Scheme != Uri.UriSchemeHttps ||
+                    origin.AbsolutePath != "/" ||
+                    !string.IsNullOrEmpty(origin.UserInfo) ||
+                    !string.IsNullOrEmpty(origin.Query) ||
+                    !string.IsNullOrEmpty(origin.Fragment))
+                {
+                    throw new ArgumentException("Only exact HTTPS origins without paths or credentials are allowed.", nameof(options));
+                }
+
+                _AllowedOrigins.Add(origin.GetLeftPart(UriPartial.Authority));
+            }
+
+            if (_AllowedOrigins.Count == 0)
+            {
+                throw new ArgumentException("At least one allowed HTTPS origin is required.", nameof(options));
+            }
         }
 
-        /// <summary>Checks outbound destination and tenant header before forwarding the request.</summary>
+        /// <summary>Checks destination and selection before the underlying network handler executes.</summary>
         protected override Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request, CancellationToken cancellationToken)
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(request);
-
             Uri? destination = request.RequestUri;
-            if (destination is null || !destination.IsAbsoluteUri || destination.Scheme != Uri.UriSchemeHttps)
+
+            if (destination is null ||
+                !destination.IsAbsoluteUri ||
+                destination.Scheme != Uri.UriSchemeHttps ||
+                !string.IsNullOrEmpty(destination.UserInfo) ||
+                !_AllowedOrigins.Contains(destination.GetLeftPart(UriPartial.Authority)))
             {
-                throw new TenantPropagationException("A permitted absolute HTTPS destination is required.");
+                throw new TenantPropagationException("The destination is not on the exact HTTPS origin allowlist.");
             }
 
-            if (!_Options.AllowedOrigins.Any(origin =>
-                    origin.IsAbsoluteUri &&
-                    origin.Scheme == Uri.UriSchemeHttps &&
-                    string.Equals(origin.IdnHost, destination.IdnHost, StringComparison.OrdinalIgnoreCase) &&
-                    origin.Port == destination.Port &&
-                    origin.AbsolutePath == "/" &&
-                    string.IsNullOrEmpty(origin.Query) &&
-                    string.IsNullOrEmpty(origin.Fragment) &&
-                    string.IsNullOrEmpty(origin.UserInfo)))
+            if (request.Headers.Contains(_HeaderName))
             {
-                throw new TenantPropagationException("Outbound destination is not in the approved origin allowlist.");
+                throw new TenantPropagationException("A tenant header already exists; use per-request selection instead.");
             }
 
-            if (!TenantHttpRequestExtensions.IsValidHeaderName(_Options.HeaderName))
-            {
-                throw new TenantPropagationException("Invalid tenant header name.");
-            }
+            bool hasSelection = request.Options.TryGetValue(TenantHttpRequestExtensions.SelectionKey, out TenantRequestSelection? selection);
 
-            if (request.Headers.TryGetValues(_Options.HeaderName, out IEnumerable<string>? values))
+            if (!hasSelection || selection is null)
             {
-                string[] slugs = values.ToArray();
-                if (slugs.Length != 1 || !TenantSlug.TryParse(slugs[0], out _))
+                if (_Mode == TenantPropagationMode.Required)
                 {
-                    throw new TenantPropagationException("Invalid or ambiguous outbound tenant header.");
+                    throw new TenantPropagationException("Tenant selection is required for this outbound request.");
                 }
-            }
-            else if (_Options.Mode == TenantPropagationMode.Required)
-            {
-                throw new TenantPropagationException("Tenant is required for this outbound request.");
+
+                return base.SendAsync(request, cancellationToken);
             }
 
+            if (!string.Equals(selection.HeaderName, _HeaderName, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new TenantPropagationException("The request tenant header name conflicts with the client policy.");
+            }
+
+            if (_Mode == TenantPropagationMode.Explicit && selection.FromContext)
+            {
+                throw new TenantPropagationException("Scoped capture is not enabled in Explicit mode.");
+            }
+
+            if (!TenantSlug.TryParse(selection.Slug, out string canonical))
+            {
+                throw new TenantPropagationException("Invalid tenant selection.");
+            }
+
+            request.Headers.Add(_HeaderName, canonical);
             return base.SendAsync(request, cancellationToken);
         }
     }
