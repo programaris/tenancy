@@ -19,6 +19,8 @@
 - [ADR-0003](adr/0003-explicit-tenant-context.md) — no implicit default tenant or global opt-out.
 - [PRF integration](prf-integration.md) — build-version and package manifest alignment.
 - [Release policy](release-policy.md) — versioning and promotion.
+- [v0.2.0 publishing runbook](operations/nuget-v0.2.0-publishing.md) — release candidate and four-package stable promotion.
+- [v0.2.0 release notes](releases/v0.2.0-notes.md) — features and supported targets.
 - [Release checklist](release-checklist.md) — requirements before `v0.1.0`.
 - [Stable v0.1.0 release notes](releases/v0.1.0-notes.md) — packages, compatibility and security.
 - [NuGet publication runbook](operations/nuget-v0.1.0-publishing.md) — pre-release checks and approved promotion.
