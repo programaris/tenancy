@@ -154,7 +154,7 @@ def main():
     validate_packages(local_feed, args.version)
 
     package_ids, program = CONSUMERS[args.framework]
-    package_references = "\\n".join(
+    package_references = "\n".join(
         f'    <PackageReference Include="{package_id}" Version="{args.version}" />'
         for package_id in package_ids
     )
