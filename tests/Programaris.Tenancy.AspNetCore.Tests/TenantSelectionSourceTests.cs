@@ -215,7 +215,7 @@ namespace Programaris.Tenancy.AspNetCore.Tests
             return app;
         }
 
-        private sealed class QuerySelectionSource : ITenantSelectionSource
+        public sealed class QuerySelectionSource : ITenantSelectionSource
         {
             public Task<IReadOnlyList<string>> GetCandidatesAsync(HttpContext context, CancellationToken cancellationToken = default)
             {
@@ -226,7 +226,7 @@ namespace Programaris.Tenancy.AspNetCore.Tests
             }
         }
 
-        private sealed class OtherQuerySelectionSource : ITenantSelectionSource
+        public sealed class OtherQuerySelectionSource : ITenantSelectionSource
         {
             public Task<IReadOnlyList<string>> GetCandidatesAsync(HttpContext context, CancellationToken cancellationToken = default)
             {
@@ -237,7 +237,7 @@ namespace Programaris.Tenancy.AspNetCore.Tests
             }
         }
 
-        private sealed class FormSelectionSource : ITenantSelectionSource
+        public sealed class FormSelectionSource : ITenantSelectionSource
         {
             public async Task<IReadOnlyList<string>> GetCandidatesAsync(HttpContext context, CancellationToken cancellationToken = default)
             {
@@ -253,7 +253,7 @@ namespace Programaris.Tenancy.AspNetCore.Tests
             }
         }
 
-        private sealed class ThrowingSelectionSource : ITenantSelectionSource
+        public sealed class ThrowingSelectionSource : ITenantSelectionSource
         {
             public Task<IReadOnlyList<string>> GetCandidatesAsync(HttpContext context, CancellationToken cancellationToken = default)
             {
@@ -261,7 +261,7 @@ namespace Programaris.Tenancy.AspNetCore.Tests
             }
         }
 
-        private sealed class UnregisteredSelectionSource : ITenantSelectionSource
+        public sealed class UnregisteredSelectionSource : ITenantSelectionSource
         {
             public Task<IReadOnlyList<string>> GetCandidatesAsync(HttpContext context, CancellationToken cancellationToken = default)
             {

@@ -7,7 +7,11 @@ All notable changes are recorded here. The project follows [Semantic Versioning]
 ### Added for v0.2.0 (development)
 
 - Public `ITenantStore` and `ITenantAccessValidator` contracts with explicit success, denial and outage states.
-- Scoped authorized tenant context and opt-in fail-closed ASP.NET Core validation.
+- Endpoint-scoped, host-defined tenant selection sources for browser requests with duplicate/conflict rejection.
+- Separate registry-validated versus membership-authorized contexts.
+- Authentication before protected tenant lookup; generic non-enumerating problem responses, host-overridable error policy.
+- Optional trusted TenantId in access validation requests for efficient PostgreSQL adapters.
+- Explicit Identity consumer integration/contract certification guidance.
 - `Programaris.Tenancy.Http` with explicit request capture, approved HTTPS origins, and outbound header validation.
 - Authorization, HTTP allowlist and concurrent isolation tests.
 - Four-package distribution with synchronized v0.2.0 versioning and SourceLink verification.
