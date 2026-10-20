@@ -40,6 +40,18 @@ namespace Programaris.Tenancy.AspNetCore
             return builder;
         }
 
+        /// <summary>
+        /// On explicitly public tenant routes, present missing/inactive tenants as a generic 403 denial.
+        /// Host business restrictions must use the same response and separately prevent enumeration.
+        /// </summary>
+        public static TBuilder UseGenericTenantFailures<TBuilder>(this TBuilder builder)
+            where TBuilder : IEndpointConventionBuilder
+        {
+            ArgumentNullException.ThrowIfNull(builder);
+            builder.WithMetadata(new GenericTenantFailureMetadata());
+            return builder;
+        }
+
         /// <summary>Allows a validated tenant to be accessed without membership checks, for explicitly public endpoints only.</summary>
         public static TBuilder AllowUnauthenticatedTenant<TBuilder>(this TBuilder builder)
             where TBuilder : IEndpointConventionBuilder
