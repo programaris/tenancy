@@ -54,9 +54,9 @@ namespace Programaris.Tenancy.Consumer
             using var outgoing = new HttpRequestMessage(HttpMethod.Get, "https://identity.programaris.com.br/v1/users");
             outgoing.WithProgramarisTenant(tenant);
 
-            if (outgoing.Headers.GetValues("X-Tenant").Single() != "programaris")
+            if (!outgoing.Options.Any() || outgoing.Headers.Contains("X-Tenant"))
             {
-                throw new InvalidOperationException("The new outbound HTTP package is not consumable.");
+                throw new InvalidOperationException("The outbound HTTP SDK did not capture request-local tenant selection.");
             }
 
             Console.WriteLine("ASP.NET Core and outbound HTTP consumer smoke tests passed.");
@@ -68,9 +68,12 @@ namespace Programaris.Tenancy.Consumer
 
 PORTABLE_PROGRAM = r"""
 using System;
+using System.Linq;
+using System.Net.Http;
 
 using Programaris.Tenancy;
 using Programaris.Tenancy.Abstractions;
+using Programaris.Tenancy.Http;
 
 namespace Programaris.Tenancy.PortableConsumer
 {
@@ -91,7 +94,17 @@ namespace Programaris.Tenancy.PortableConsumer
                 throw new InvalidOperationException("Invalid portable tenant was accepted.");
             }
 
-            Console.WriteLine("Portable package consumer smoke test passed.");
+            using var outgoing = new HttpRequestMessage(
+                HttpMethod.Get,
+                "https://identity.programaris.com.br/v1/users");
+            outgoing.WithProgramarisTenant(tenant);
+
+            if (!outgoing.Options.Any() || outgoing.Headers.Contains("X-Tenant"))
+            {
+                throw new InvalidOperationException("The .NET 8 HTTP SDK must capture selection before header injection.");
+            }
+
+            Console.WriteLine("Portable and HTTP package consumer smoke test passed.");
         }
     }
 }
@@ -100,7 +113,7 @@ namespace Programaris.Tenancy.PortableConsumer
 
 CONSUMERS = {
     "net10.0": (("Programaris.Tenancy.AspNetCore", "Programaris.Tenancy.Http"), ASP_NET_CORE_PROGRAM),
-    "net8.0": (("Programaris.Tenancy",), PORTABLE_PROGRAM),
+    "net8.0": (("Programaris.Tenancy.Http",), PORTABLE_PROGRAM),
 }
 
 
@@ -155,7 +168,7 @@ def main():
         "--framework",
         choices=tuple(CONSUMERS),
         default="net10.0",
-        help="net8.0 exercises the portable netstandard2.0 packages; requires .NET 8.",
+        help="net8.0 exercises the portable contracts and outbound HTTP SDK; requires .NET 8.",
     )
 
     args = parser.parse_args()

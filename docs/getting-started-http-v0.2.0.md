@@ -1,6 +1,6 @@
 # Outbound tenant HTTP SDK — v0.2.0
 
-This opt-in package targets .NET 10 initially. Install `Programaris.Tenancy.Http` alongside the existing Tenancy packages.
+This opt-in package targets .NET 8 and .NET 10. Install `Programaris.Tenancy.Http` alongside the existing Tenancy packages.
 
 ```csharp
 services.AddHttpClient("Identity")

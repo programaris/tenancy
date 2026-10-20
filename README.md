@@ -34,7 +34,7 @@ Tenant administration, built-in Identity membership implementations, background-
 | `Programaris.Tenancy.Abstractions` | `netstandard2.0` | Tenant selection plus provider-independent validation and access contracts |
 | `Programaris.Tenancy` | `netstandard2.0`, `net10.0` | Slug validation, core exceptions |
 | `Programaris.Tenancy.AspNetCore` | `net10.0` | Tenant selection and opt-in authorized request context |
-| `Programaris.Tenancy.Http` | `net10.0` | Restricted outbound HttpClient requests |
+| `Programaris.Tenancy.Http` | `net8.0`, `net10.0` | Restricted outbound HttpClient requests |
 
 Building the portable targets does **not** certify runtime compatibility with Unity Mono/IL2CPP. See [Compatibility](docs/compatibility.md).
 
