@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace Programaris.Tenancy.Abstractions
 {
     /// <summary>Resolves tenant existence and operational status from a trusted source.</summary>

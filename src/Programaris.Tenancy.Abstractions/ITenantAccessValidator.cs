@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace Programaris.Tenancy.Abstractions
 {
     /// <summary>Decides whether an already authenticated identity may access a tenant.</summary>
