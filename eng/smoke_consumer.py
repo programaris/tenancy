@@ -25,6 +25,7 @@ using System.Net.Http;
 using Programaris.Tenancy;
 using Programaris.Tenancy.Abstractions;
 using Programaris.Tenancy.AspNetCore;
+using Programaris.Tenancy.Http;
 
 namespace Programaris.Tenancy.Consumer
 {
@@ -49,7 +50,15 @@ namespace Programaris.Tenancy.Consumer
                 throw new InvalidOperationException("HTTP tenant propagation failed.");
             }
 
-            Console.WriteLine("ASP.NET Core package consumer smoke test passed.");
+            using var outgoing = new HttpRequestMessage(HttpMethod.Get, "https://identity.programaris.com.br/v1/users");
+            outgoing.WithProgramarisTenant(tenant);
+
+            if (outgoing.Headers.GetValues("X-Tenant").Single() != "programaris")
+            {
+                throw new InvalidOperationException("The new outbound HTTP package is not consumable.");
+            }
+
+            Console.WriteLine("ASP.NET Core and outbound HTTP consumer smoke tests passed.");
         }
     }
 }
@@ -89,8 +98,8 @@ namespace Programaris.Tenancy.PortableConsumer
 
 
 CONSUMERS = {
-    "net10.0": ("Programaris.Tenancy.AspNetCore", ASP_NET_CORE_PROGRAM),
-    "net8.0": ("Programaris.Tenancy", PORTABLE_PROGRAM),
+    "net10.0": (("Programaris.Tenancy.AspNetCore", "Programaris.Tenancy.Http"), ASP_NET_CORE_PROGRAM),
+    "net8.0": (("Programaris.Tenancy",), PORTABLE_PROGRAM),
 }
 
 
@@ -144,7 +153,11 @@ def main():
 
     validate_packages(local_feed, args.version)
 
-    package_id, program = CONSUMERS[args.framework]
+    package_ids, program = CONSUMERS[args.framework]
+    package_references = "\\n".join(
+        f'    <PackageReference Include="{package_id}" Version="{args.version}" />'
+        for package_id in package_ids
+    )
 
     with tempfile.TemporaryDirectory(prefix="tenancy-nuget-consumer-") as temp:
         work = Path(temp)
@@ -163,8 +176,7 @@ def main():
     <NuGetAudit>false</NuGetAudit>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="{package_id}"
-                      Version="{args.version}" />
+{package_references}
   </ItemGroup>
 </Project>
 """,
@@ -174,7 +186,8 @@ def main():
         (work / "Program.cs").write_text(program, encoding="utf-8")
 
         run_command(
-            ["dotnet", "restore", str(project), "--source", str(local_feed)],
+            ["dotnet", "restore", str(project), "--source", str(local_feed),
+             "--source", "https://api.nuget.org/v3/index.json"],
             environment,
         )
 
