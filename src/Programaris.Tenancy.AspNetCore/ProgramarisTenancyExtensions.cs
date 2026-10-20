@@ -37,9 +37,8 @@ namespace Programaris.Tenancy.AspNetCore
         /// Enables a host-provided selection source on only this endpoint.
         /// The source must be registered as its concrete type in request DI.
         /// </summary>
-        public static TBuilder UseProgramarisTenantSelectionSource<TSource, TBuilder>(this TBuilder builder)
+        public static IEndpointConventionBuilder UseProgramarisTenantSelectionSource<TSource>(this IEndpointConventionBuilder builder)
             where TSource : class, ITenantSelectionSource
-            where TBuilder : IEndpointConventionBuilder
         {
             ArgumentNullException.ThrowIfNull(builder);
 

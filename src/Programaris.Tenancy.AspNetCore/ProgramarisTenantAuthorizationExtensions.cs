@@ -14,6 +14,10 @@ namespace Programaris.Tenancy.AspNetCore
         {
             ArgumentNullException.ThrowIfNull(services);
 
+            services.TryAddScoped<TenantValidationContextAccessor>();
+            services.TryAddScoped<ITenantValidationContextAccessor>(
+                provider => provider.GetRequiredService<TenantValidationContextAccessor>());
+            services.TryAddSingleton<ITenantFailureResponseWriter, DefaultTenantFailureResponseWriter>();
             services.TryAddScoped<TenantAuthorizationContextAccessor>();
             services.TryAddScoped<ITenantAuthorizationContextAccessor>(
                 provider => provider.GetRequiredService<TenantAuthorizationContextAccessor>());
