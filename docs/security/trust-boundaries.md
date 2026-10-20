@@ -14,6 +14,10 @@ An inbound `X-Tenant` value is **untrusted input**. The SDK parses and carries i
 6. Remove externally supplied privileged/internal context headers at trust boundaries.
 7. Never treat a platform-owned tenant (e.g. `programaris`) as a supertenant.
 
+## Protected tenant context (v0.2.0)
+
+Use `AddProgramarisTenantProtection` and `UseProgramarisTenantProtection` only with registered trusted `ITenantStore` and `ITenantAccessValidator` implementations. Apply after authentication and tenant selection. A successfully authorized tenant context only proves tenant-level access for the evaluated operation; resource-level authorization and isolation remain the application\'s responsibility. `AllowMissingTenant()` skips protection entirely and must only be used for tenant-independent routes. Failure or unavailable status from either provider denies execution.
+
 ## HTTP propagation
 
 The helper does **not** automatically copy headers between requests. Call `AddProgramarisTenant` only when sending to a known, approved downstream endpoint. A receiving service still has to perform the checks above; network location and `X-Tenant` alone are never proof of authorization.

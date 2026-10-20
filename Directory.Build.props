@@ -10,9 +10,9 @@
         <Deterministic>true</Deterministic>
 
         <!-- Local development defaults; the PRF version resolver overrides these in CI. -->
-        <Version Condition="'$(Version)' == ''">0.1.0-preview.1</Version>
-        <AssemblyVersion Condition="'$(AssemblyVersion)' == ''">0.1.0.0</AssemblyVersion>
-        <FileVersion Condition="'$(FileVersion)' == ''">0.1.0.0</FileVersion>
+        <Version Condition="'$(Version)' == ''">0.2.0-preview.1</Version>
+        <AssemblyVersion Condition="'$(AssemblyVersion)' == ''">0.2.0.0</AssemblyVersion>
+        <FileVersion Condition="'$(FileVersion)' == ''">0.2.0.0</FileVersion>
 
         <Authors>PROGRAMARIS</Authors>
         <Company>PROGRAMARIS</Company>
@@ -35,7 +35,8 @@
 
     <ItemGroup Condition="'$(MSBuildProjectName)' == 'Programaris.Tenancy.Abstractions'
                Or '$(MSBuildProjectName)' == 'Programaris.Tenancy'
-               Or '$(MSBuildProjectName)' == 'Programaris.Tenancy.AspNetCore'">
+               Or '$(MSBuildProjectName)' == 'Programaris.Tenancy.AspNetCore'
+               Or '$(MSBuildProjectName)' == 'Programaris.Tenancy.Http'">
 
         <None Include="$(MSBuildThisFileDirectory)assets\programaris-icon.png" Pack="true" PackagePath="/" />
 

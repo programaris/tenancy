@@ -13,6 +13,7 @@ PACKAGES = (
     "Programaris.Tenancy.Abstractions",
     "Programaris.Tenancy",
     "Programaris.Tenancy.AspNetCore",
+    "Programaris.Tenancy.Http",
 )
 
 
@@ -24,6 +25,7 @@ using System.Net.Http;
 using Programaris.Tenancy;
 using Programaris.Tenancy.Abstractions;
 using Programaris.Tenancy.AspNetCore;
+using Programaris.Tenancy.Http;
 
 namespace Programaris.Tenancy.Consumer
 {
@@ -48,7 +50,14 @@ namespace Programaris.Tenancy.Consumer
                 throw new InvalidOperationException("HTTP tenant propagation failed.");
             }
 
-            Console.WriteLine("ASP.NET Core package consumer smoke test passed.");
+            using var captured = new HttpRequestMessage(HttpMethod.Get, "https://example.invalid/").WithTenant("programaris");
+
+            if (!captured.Options.Any())
+            {
+                throw new InvalidOperationException("HTTP request tenant capture failed.");
+            }
+
+            Console.WriteLine("ASP.NET Core and HTTP package consumer smoke test passed.");
         }
     }
 }
@@ -60,6 +69,8 @@ using System;
 
 using Programaris.Tenancy;
 using Programaris.Tenancy.Abstractions;
+using Programaris.Tenancy.Http;
+using System.Net.Http;
 
 namespace Programaris.Tenancy.PortableConsumer
 {
@@ -80,7 +91,8 @@ namespace Programaris.Tenancy.PortableConsumer
                 throw new InvalidOperationException("Invalid portable tenant was accepted.");
             }
 
-            Console.WriteLine("Portable package consumer smoke test passed.");
+            using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.invalid/").WithTenant("programaris");
+            Console.WriteLine("Portable .NET 8 HTTP consumer smoke test passed.");
         }
     }
 }
@@ -88,8 +100,8 @@ namespace Programaris.Tenancy.PortableConsumer
 
 
 CONSUMERS = {
-    "net10.0": ("Programaris.Tenancy.AspNetCore", ASP_NET_CORE_PROGRAM),
-    "net8.0": ("Programaris.Tenancy", PORTABLE_PROGRAM),
+    "net10.0": (("Programaris.Tenancy.AspNetCore", "Programaris.Tenancy.Http"), ASP_NET_CORE_PROGRAM),
+    "net8.0": (("Programaris.Tenancy.Http",), PORTABLE_PROGRAM),
 }
 
 
@@ -143,7 +155,7 @@ def main():
 
     validate_packages(local_feed, args.version)
 
-    package_id, program = CONSUMERS[args.framework]
+    package_ids, program = CONSUMERS[args.framework]
 
     with tempfile.TemporaryDirectory(prefix="tenancy-nuget-consumer-") as temp:
         work = Path(temp)
@@ -162,8 +174,7 @@ def main():
     <NuGetAudit>false</NuGetAudit>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="{package_id}"
-                      Version="{args.version}" />
+    {chr(10).join(f'    <PackageReference Include="{package_id}" Version="{args.version}" />' for package_id in package_ids)}
   </ItemGroup>
 </Project>
 """,
@@ -173,7 +184,7 @@ def main():
         (work / "Program.cs").write_text(program, encoding="utf-8")
 
         run_command(
-            ["dotnet", "restore", str(project), "--source", str(local_feed)],
+            ["dotnet", "restore", str(project), "--source", str(local_feed), "--source", "https://api.nuget.org/v3/index.json"],
             environment,
         )
 

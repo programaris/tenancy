@@ -2,10 +2,12 @@
   <Folder Name="/src/">
     <Project Path="src/Programaris.Tenancy.Abstractions/Programaris.Tenancy.Abstractions.csproj" />
     <Project Path="src/Programaris.Tenancy.AspNetCore/Programaris.Tenancy.AspNetCore.csproj" />
+    <Project Path="src/Programaris.Tenancy.Http/Programaris.Tenancy.Http.csproj" />
     <Project Path="src/Programaris.Tenancy/Programaris.Tenancy.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Programaris.Tenancy.AspNetCore.Tests/Programaris.Tenancy.AspNetCore.Tests.csproj" />
+    <Project Path="tests/Programaris.Tenancy.Http.Tests/Programaris.Tenancy.Http.Tests.csproj" />
     <Project Path="tests/Programaris.Tenancy.Tests/Programaris.Tenancy.Tests.csproj" />
   </Folder>
   <Folder Name="/assets/" />

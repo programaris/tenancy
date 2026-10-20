@@ -1,5 +1,5 @@
 param(
-    [string] $Version = "0.1.0-preview.1"
+    [string] $Version = "0.2.0-preview.1"
 )
 
 Set-StrictMode -Version Latest
@@ -34,7 +34,8 @@ try
     $Projects = @(
         "src/Programaris.Tenancy.Abstractions/Programaris.Tenancy.Abstractions.csproj",
         "src/Programaris.Tenancy/Programaris.Tenancy.csproj",
-        "src/Programaris.Tenancy.AspNetCore/Programaris.Tenancy.AspNetCore.csproj"
+        "src/Programaris.Tenancy.AspNetCore/Programaris.Tenancy.AspNetCore.csproj",
+        "src/Programaris.Tenancy.Http/Programaris.Tenancy.Http.csproj"
     )
 
     Invoke-Checked "Validate distribution" {

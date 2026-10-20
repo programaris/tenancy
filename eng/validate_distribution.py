@@ -12,12 +12,12 @@ def main():
     if manifest.get("schemaVersion") != 1 or manifest.get("versionPolicy") != "synchronized":
         raise ValueError("Unsupported distribution manifest")
     packages = manifest.get("packages", [])
-    if len(packages) != 3:
-        raise ValueError("Expected three public NuGet packages")
+    if len(packages) != 4:
+        raise ValueError("Expected four public NuGet packages")
     package_ids = set()
     for package in packages:
         if package.get("kind") != "nuget":
-            raise ValueError("Only NuGet packages are available in v0.1.0")
+            raise ValueError("Only NuGet packages are available in v0.2.0")
         path = root / package["path"]
         if not path.resolve().is_relative_to(root.resolve()) or not path.is_file():
             raise ValueError(f"Missing or external project: {path}")

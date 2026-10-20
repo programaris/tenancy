@@ -16,7 +16,8 @@ namespace Programaris.Tenancy.SourceLinkProbe
         {
             ["Programaris.Tenancy.Abstractions"] = ["netstandard2.0"],
             ["Programaris.Tenancy"] = ["netstandard2.0", "net10.0"],
-            ["Programaris.Tenancy.AspNetCore"] = ["net10.0"]
+            ["Programaris.Tenancy.AspNetCore"] = ["net10.0"],
+            ["Programaris.Tenancy.Http"] = ["net8.0", "net10.0"]
         };
 
         private static int Main(string[] args)

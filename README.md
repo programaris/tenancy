@@ -6,11 +6,11 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
 > [!IMPORTANT]
-> **Release policy:** local builds default to `0.1.0-preview.1`; untagged CI runs create `0.1.0-dev.N` artifacts. Only packages verified on NuGet.org are published stable releases. The `0.1.0` promotion requires the [release checklist](docs/release-checklist.md) and [protected publishing workflow](docs/operations/nuget-v0.1.0-publishing.md).
+> **Release policy:** v0.1.0 is published. Development now targets v0.2.0; local builds default to `0.2.0-preview.1` and untagged CI produces `0.2.0-dev.N` artifacts. The four-package v0.2.0 release requires certification before publishing. PRF migration is deferred.
 
 PROGRAMARIS uses its own services as a tenant. External consumers use the same public tenant-selection convention. This repository contains client-facing contracts, integration helpers, samples, and documentation, **not** tenant administration, identity-provider implementation, or authorization rules.
 
-## Supported scope in 0.1.0
+## Supported scope (v0.2.0 development)
 
 - Parse a selected tenant from the HTTP `X-Tenant` header (lowercase slug).
 - Read the selected tenant through a request-scoped `ITenantContextAccessor`.
@@ -22,7 +22,7 @@ PROGRAMARIS uses its own services as a tenant. External consumers use the same p
 
 ### Not provided
 
-Tenant registration, user membership checks, administrative cross-tenant access, background-worker scopes, automatic HTTP propagation, persistence isolation, Unity UPM packaging, or an authorization middleware.
+Tenant registration, built-in Identity authorization decisions, privileged cross-tenant access, background-worker scopes, persistence isolation, or Unity UPM packaging. The new authorization middleware is opt-in and requires externally provided trusted stores/validators.
 
 ## Packages and compatibility
 
@@ -30,7 +30,8 @@ Tenant registration, user membership checks, administrative cross-tenant access,
 | --- | --- | --- |
 | `Programaris.Tenancy.Abstractions` | `netstandard2.0` | `TenantContext`, `ITenantContextAccessor` |
 | `Programaris.Tenancy` | `netstandard2.0`, `net10.0` | Slug validation, core exceptions |
-| `Programaris.Tenancy.AspNetCore` | `net10.0` | Inbound HTTP middleware and opt-in outbound helpers |
+| `Programaris.Tenancy.AspNetCore` | `net10.0` | Inbound selection middleware and opt-in access protection |
+| `Programaris.Tenancy.Http` | `net8.0`, `net10.0` | Allowlisted outbound propagation for named/typed HTTP clients |
 
 Building the portable targets does **not** certify runtime compatibility with Unity Mono/IL2CPP. See [Compatibility](docs/compatibility.md).
 
@@ -88,6 +89,10 @@ using var response = await httpClient.SendAsync(request, cancellationToken);
 ```
 
 Only propagate to approved internal services. Do not forward an untrusted inbound `X-Tenant` to external destinations or treat it as an authorization assertion.
+
+## Tenant authorization and secure outbound HTTP (v0.2.0)
+
+Tenant selection and authorization are different: the original accessor remains selection-only. Register trusted tenant existence and membership providers in the consuming application, then install opt-in protection after authentication and tenant selection. See [v0.2.0 integration](docs/reference/public-api-v0.2.0.md) for examples, failure codes, DI boundaries, and safe HTTP propagation. The SDK does **not** include a permissive fallback or a hardcoded Identity dependency.
 
 ## Documentation
 

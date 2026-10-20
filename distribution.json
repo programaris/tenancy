@@ -16,6 +16,11 @@
             "kind": "nuget",
             "id": "Programaris.Tenancy.AspNetCore",
             "path": "src/Programaris.Tenancy.AspNetCore/Programaris.Tenancy.AspNetCore.csproj"
+        },
+        {
+            "kind": "nuget",
+            "id": "Programaris.Tenancy.Http",
+            "path": "src/Programaris.Tenancy.Http/Programaris.Tenancy.Http.csproj"
         }
     ],
     "dependencies": []

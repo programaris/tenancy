@@ -4,7 +4,20 @@ All notable changes are recorded here. The project follows [Semantic Versioning]
 
 ## [Unreleased]
 
-No changes since the v0.1.0 baseline.
+### Added for v0.2.0 (development, not released)
+
+- Provider-neutral tenant store and access validator contracts, including fail-closed unavailable outcomes.
+- Per-request authorized tenant context, separate from selection, and opt-in ASP.NET Core protection middleware.
+- Operation metadata and integration tests covering inactive/unknown/unauthorized tenants, outages, and concurrency.
+- New Programaris.Tenancy.Http package with request-specific tenant capture and exact HTTPS destination allowlists.
+- Synchronized four-package NuGet inventory and .NET 8/.NET 10 HTTP consumer support.
+
+### Security
+
+- Never treat tenant selection or forwarding as authentication or access authorization.
+- HTTP forwarding rejects conflicting headers and unapproved destinations and disables redirects and cookies in supported primary handlers.
+- The SDK provides contracts only; Identity and other trusted authorization adapters remain consumer-owned.
+
 
 ## [0.1.0] — Prepared for stable publication
 
