@@ -1,13 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Options;
 
 namespace Programaris.Tenancy.Http
 {
-    /// <summary>Registers tenant-aware outbound requests with an origin allowlist and redirects disabled.</summary>
+    /// <summary>Registers approved tenant-aware outgoing HTTP clients.</summary>
     public static class ProgramarisTenancyHttpExtensions
     {
-        /// <summary>Configures or provides tenant-aware HTTP integration.</summary>
+        /// <summary>Validates HTTPS destinations and disables automatic redirects and cookies.</summary>
         public static IHttpClientBuilder AddProgramarisTenancyHttp(
             this IHttpClientBuilder builder,
             Action<TenantHttpClientOptions> configure)
@@ -15,24 +14,21 @@ namespace Programaris.Tenancy.Http
             ArgumentNullException.ThrowIfNull(builder);
             ArgumentNullException.ThrowIfNull(configure);
 
-            builder.Services.Configure(builder.Name, configure);
-            builder.Services.AddTransient<TenantPropagationHandler>();
+            var options = new TenantHttpClientOptions();
+            configure(options);
 
-            // HttpClientHandler redirects happen below DelegatingHandler and bypass destination checks.
-            // This must be the final primary handler configuration on this named client.
+            // Refuse unsafe configuration during registration, not on the first network request.
+            _ = new TenantPropagationHandler(Options.Create(options));
+
+            // Redirects happen below delegating handlers; cookies must not leak between tenants.
+            // Do not override the primary handler after configuring this client.
             builder.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
             {
-                AllowAutoRedirect = false
+                AllowAutoRedirect = false,
+                UseCookies = false
             });
 
-            builder.AddHttpMessageHandler(provider =>
-            {
-                IOptionsMonitor<TenantHttpClientOptions> monitor =
-                    provider.GetRequiredService<IOptionsMonitor<TenantHttpClientOptions>>();
-                return new TenantPropagationHandler(
-                    Options.Create(monitor.Get(builder.Name)));
-            });
-
+            builder.AddHttpMessageHandler(() => new TenantPropagationHandler(Options.Create(options)));
             return builder;
         }
     }

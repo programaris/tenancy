@@ -27,6 +27,15 @@ namespace Programaris.Tenancy.AspNetCore
             return app.UseMiddleware<TenantAuthorizationMiddleware>();
         }
 
+        /// <summary>Annotates the operation to be checked by the trusted tenant access validator.</summary>
+        public static TBuilder RequireProgramarisTenantOperation<TBuilder>(this TBuilder builder, string operation)
+            where TBuilder : IEndpointConventionBuilder
+        {
+            ArgumentNullException.ThrowIfNull(builder);
+            builder.WithMetadata(new TenantOperationMetadata(operation));
+            return builder;
+        }
+
         /// <summary>Allows a validated tenant to be accessed without membership checks, for explicitly public endpoints only.</summary>
         public static TBuilder AllowUnauthenticatedTenant<TBuilder>(this TBuilder builder)
             where TBuilder : IEndpointConventionBuilder

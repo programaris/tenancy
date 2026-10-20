@@ -12,7 +12,7 @@ FRAMEWORKS = {
     "Programaris.Tenancy.Abstractions": ("netstandard2.0",),
     "Programaris.Tenancy": ("netstandard2.0", "net10.0"),
     "Programaris.Tenancy.AspNetCore": ("net10.0",),
-    "Programaris.Tenancy.Http": ("net10.0",),
+    "Programaris.Tenancy.Http": ("net8.0", "net10.0"),
 }
 
 ALLOWED_DEPENDENCIES = {

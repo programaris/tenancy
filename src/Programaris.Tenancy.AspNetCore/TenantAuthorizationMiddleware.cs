@@ -86,7 +86,10 @@ namespace Programaris.Tenancy.AspNetCore
                 try
                 {
                     access = await validator.ValidateAsync(
-                        new TenantAccessRequest(requested.Slug, context.User),
+                        new TenantAccessRequest(
+                            requested.Slug,
+                            context.User,
+                            context.GetEndpoint()?.Metadata.GetMetadata<TenantOperationMetadata>()?.Operation),
                         context.RequestAborted);
                 }
                 catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
