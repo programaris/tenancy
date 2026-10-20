@@ -1,20 +1,17 @@
 # Release policy
 
-## Version source
+## Versions
 
-`version.json` declares the next planned stable version (`0.1.0`). `eng/version.py` resolves PRF-style synchronized package versions and assembly versions for the CI pipeline.
-
-- Local development uses `0.1.0-preview.1` in `Directory.Build.props` until release approval.
-- CI without a version tag produces `0.1.0-dev.N` artifacts (not published).
-- An approved `v0.1.0-rc.N` tag produces release-candidate artifacts (not published).
-- An approved `v0.1.0` tag produces stable build artifacts (not published by CI).
+The source of truth is `version.json` (`nextVersion: 0.2.0`). `eng/version.py` resolves synchronized four-package SemVer, assembly versions and file versions. Local development uses `0.2.0-preview.1` and untagged CI builds `0.2.0-dev.N`. Tagged `v0.2.0-rc.N` builds are certification-only; they are never published to NuGet.org.
 
 `AssemblyVersion = MAJOR.MINOR.0.0`; `FileVersion = MAJOR.MINOR.PATCH.BUILD`; `PackageVersion = MAJOR.MINOR.PATCH[-channel.N]`.
 
-## Public publishing
+## v0.2.0 release gates
 
-This repository's CI **only validates and uploads package artifacts**. It never publishes, creates tags, or promotes releases.
+1. Certify Windows/Linux Release build/test and exact SourceLink/dependency/SHA-256 manifest for all four `.nupkg` and four `.snupkg`, plus isolated .NET 8/.NET 10 consumers.
+2. Review v0.1.0 compatibility, security, tenant selection/validation/authorization and fail-closed scenarios. Obtain independent Identity/Gateway contract-integration evidence against a v0.2.0 candidate (a host must supply its own trusted adapters).
+3. Approve a source-pinned `v0.2.0-rc.1` and successful tag CI. A change to approved source requires a new candidate and re-certification.
+4. Obtain explicit production approval; create `v0.2.0` pointing to the exact protected `dev` HEAD. Confirm successful stable tag CI and verify all eight immutable files.
+5. Manually dispatch `.github/workflows/publish.yml` from `dev` with tag `v0.2.0`, confirmation `PUBLISH`, approved protected environment `nuget-production`, and short-lived NuGet Trusted Publishing credentials. The workflow publishes exactly four packages, checks NuGet.org availability, and creates a GitHub Release.
 
-Production publication requires (a) approved `v0.1.0` tag pointing to protected `dev` HEAD, (b) passing Windows/Linux tagged CI, portable consumer, SourceLink and SHA-256 integrity gates, (c) release notes, (d) the protected `nuget-production` environment, and (e) explicit manual execution of `.github/workflows/publish.yml` with `PUBLISH` confirmation. That workflow downloads **the exact tagged CI packages**, verifies them independently, and uses NuGet Trusted Publishing OIDC without a long-lived API key. Successful publication is followed by a GitHub Release with six artifacts and a manifest. `v0.1.0-rc.1` is for certification only and is never published.
-
-The internally maintained corporate PRF starter is not directly referenced from the public GitHub Actions workflow. See [PRF integration](prf-integration.md).
+No automatic publication or embedded NuGet API key is authorized. Never retag/rebuild immutable published versions or silently skip duplicate package versions. See [v0.2.0 runbook](operations/nuget-v0.2.0-publishing.md). The already-published v0.1.0 remains documented in its [historical runbook](operations/nuget-v0.1.0-publishing.md).
