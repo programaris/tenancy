@@ -14,6 +14,104 @@ namespace Programaris.Tenancy.AspNetCore.Tests
 {
     public sealed class TenantAuthorizationTests
     {
+        private static readonly Guid KnownTenantId = Guid.Parse("c695767e-c948-4860-b0f2-cb13ec269a4e");
+
+        [Fact]
+        public async Task AnonymousUnknownTenantIsNotQueriedOrDisclosed()
+        {
+            var store = new CountingTenantStore();
+            await using var app = await CreateAppAsync(store);
+            using var client = app.GetTestClient();
+            using var request = Request("unknown");
+            using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+            Assert.Equal(0, store.Calls);
+        }
+
+        [Fact]
+        public async Task ValidatedPublicTenantIsNeverExposedAsAuthorized()
+        {
+            await using var app = await CreateAppAsync();
+            using var client = app.GetTestClient();
+            using var request = Request("tenant-id");
+            request.RequestUri = new Uri("http://localhost/public-context");
+            using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal($"tenant-id|none|{KnownTenantId}", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        }
+
+        [Fact]
+        public async Task GenericPublicFailuresHideUnknownAndInactiveWithSameResponse()
+        {
+            await using var app = await CreateAppAsync();
+            using var client = app.GetTestClient();
+            string? firstBody = null;
+
+            foreach (string slug in new[] { "missing", "inactive" })
+            {
+                using var request = Request(slug);
+                request.RequestUri = new Uri("http://localhost/public-generic");
+                using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+                Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+                string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+                Assert.Contains("tenant_access_unavailable", body, StringComparison.Ordinal);
+                if (firstBody is not null)
+                {
+                    Assert.Equal(firstBody, body);
+                }
+                firstBody = body;
+            }
+        }
+
+        [Fact]
+        public async Task AuthenticatedUnknownTenantAndDeniedMembershipHaveSameResponse()
+        {
+            await using var app = await CreateAppAsync();
+            using var client = app.GetTestClient();
+            string? firstBody = null;
+
+            foreach (string slug in new[] { "missing", "programaris" })
+            {
+                using var request = Request(slug);
+                request.Headers.Add("X-Test-Principal", "bob");
+                using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+                Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+                string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+                if (firstBody is not null)
+                {
+                    Assert.Equal(firstBody, body);
+                }
+                firstBody = body;
+            }
+        }
+
+        [Fact]
+        public async Task TrustedTenantIdIsPassedToAuthorizationValidator()
+        {
+            await using var app = await CreateAppAsync();
+            using var client = app.GetTestClient();
+            using var request = Request("tenant-id");
+            request.Headers.Add("X-Test-Principal", "alice");
+            using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal("tenant-id", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        }
+
+        [Fact]
+        public async Task EmptyRegistryTenantIdentityFailsClosed()
+        {
+            await using var app = await CreateAppAsync();
+            using var client = app.GetTestClient();
+            using var request = Request("empty-id");
+            request.RequestUri = new Uri("http://localhost/public");
+            using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        }
+
         [Fact]
         public async Task ValidTenantDoesNotGrantUnauthenticatedAccess()
         {
@@ -171,13 +269,20 @@ namespace Programaris.Tenancy.AspNetCore.Tests
             return request;
         }
 
-        private static async Task<WebApplication> CreateAppAsync()
+        private static async Task<WebApplication> CreateAppAsync(ITenantStore? store = null)
         {
             var builder = WebApplication.CreateBuilder();
             builder.WebHost.UseTestServer();
             builder.Services.AddProgramarisTenancy();
             builder.Services.AddProgramarisTenantAuthorization();
-            builder.Services.AddSingleton<ITenantStore, StubTenantStore>();
+            if (store is null)
+            {
+                builder.Services.AddSingleton<ITenantStore, StubTenantStore>();
+            }
+            else
+            {
+                builder.Services.AddSingleton(store);
+            }
             builder.Services.AddSingleton<ITenantAccessValidator, DenyAccessValidator>();
 
             WebApplication app = builder.Build();
@@ -205,10 +310,31 @@ namespace Programaris.Tenancy.AspNetCore.Tests
                 .RequireProgramarisTenantOperation("profile.delete");
             app.MapGet("/public", (ITenantAuthorizationContextAccessor context) =>
                 Results.Text(context.Current?.Slug ?? "none")).AllowUnauthenticatedTenant();
+            app.MapGet("/public-context", (
+                ITenantValidationContextAccessor validated,
+                ITenantAuthorizationContextAccessor authorized) =>
+                Results.Text($"{validated.Current?.Slug ?? "none"}|{authorized.Current?.Slug ?? "none"}|{validated.Current?.TenantId}"))
+                .AllowUnauthenticatedTenant();
+
+            app.MapGet("/public-generic", () => Results.Ok())
+                .AllowUnauthenticatedTenant()
+                .UseGenericTenantFailures();
+
             app.MapGet("/health", (ITenantAuthorizationContextAccessor context) =>
                 Results.Text(context.Current?.Slug ?? "none")).AllowMissingTenant();
             await app.StartAsync(TestContext.Current.CancellationToken);
             return app;
+        }
+
+        private sealed class CountingTenantStore : ITenantStore
+        {
+            public int Calls { get; private set; }
+
+            public Task<TenantValidationResult> FindAsync(string slug, CancellationToken cancellationToken = default)
+            {
+                Calls++;
+                return Task.FromResult(TenantValidationResult.NotFound());
+            }
         }
 
         private sealed class StubTenantStore : ITenantStore
@@ -218,6 +344,8 @@ namespace Programaris.Tenancy.AspNetCore.Tests
                 TenantValidationResult result = slug switch
                 {
                     "programaris" => TenantValidationResult.Found(new TenantContext(slug)),
+                    "tenant-id" => TenantValidationResult.Found(new TenantContext(slug, KnownTenantId)),
+                    "empty-id" => TenantValidationResult.Found(new TenantContext(slug, Guid.Empty)),
                     "access-unavailable" => TenantValidationResult.Found(new TenantContext(slug)),
                     "inactive" => TenantValidationResult.Inactive(),
                     "mismatch" => TenantValidationResult.Found(new TenantContext("programaris")),
@@ -239,7 +367,8 @@ namespace Programaris.Tenancy.AspNetCore.Tests
                 }
 
                 return Task.FromResult(
-                    request.TenantSlug == "programaris" &&
+                    (request.TenantSlug == "programaris" ||
+                     (request.TenantSlug == "tenant-id" && request.TenantId == KnownTenantId)) &&
                     request.Principal.Identity?.Name == "alice" &&
                     (request.Operation is null || request.Operation == "profile.read")
                         ? TenantAccessResult.Granted()
