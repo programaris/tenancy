@@ -12,6 +12,7 @@ FRAMEWORKS = {
     "Programaris.Tenancy.Abstractions": ("netstandard2.0",),
     "Programaris.Tenancy": ("netstandard2.0", "net10.0"),
     "Programaris.Tenancy.AspNetCore": ("net10.0",),
+    "Programaris.Tenancy.Http": ("net10.0",),
 }
 
 ALLOWED_DEPENDENCIES = {
@@ -21,6 +22,7 @@ ALLOWED_DEPENDENCIES = {
         "NETStandard.Library",
     },
     "Programaris.Tenancy.AspNetCore": {"Programaris.Tenancy"},
+    "Programaris.Tenancy.Http": {"Programaris.Tenancy", "Microsoft.Extensions.Http"},
 }
 
 PUBLIC_REPOSITORY = "https://github.com/programaris/tenancy"

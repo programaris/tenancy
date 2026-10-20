@@ -5,6 +5,9 @@
 - [Architecture](architecture/overview.md) — modular design and lifecycle.
 - [Tenant context](concepts/tenant-context.md) — accessor contract and scope.
 - [HTTP contract](reference/http-contract.md) — header rules and problem responses.
+- [Tenant trust model v0.2.0](architecture/tenant-trust-model-v0.2.0.md) — selection, validation, and authorization.
+- [Outbound HTTP v0.2.0](getting-started-http-v0.2.0.md) — restricted propagation and handler lifetime precautions.
+- [v0.2.0 development notes](releases/v0.2.0-development.md) — current scope and certification requirements.
 - [Public API v0.1.0](reference/public-api-v0.1.0.md) — signatures and compatibility guarantees.
 - [Trust boundaries](security/trust-boundaries.md) — selection versus authorization.
 - [SDK security review](security/sdk-security-review-v0.1.0.md) — assessed threats and residual host responsibilities.
@@ -18,4 +21,4 @@
 - [NuGet publication runbook](operations/nuget-v0.1.0-publishing.md) — pre-release checks and approved promotion.
 - [v0.1.0 certification record](releases/v0.1.0.md) — evidence register and remaining release gates.
 
-This documentation describes the source preview and its intended v0.1.0 feature scope. A stable release must pass the checklist and publish matching packages.
+v0.1.0 is the stable baseline. v0.2.0 APIs are under development and must pass independent release certification.

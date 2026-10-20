@@ -1,5 +1,5 @@
 param(
-    [string] $Version = "0.1.0-preview.1"
+    [string] $Version = "0.2.0-preview.1"
 )
 
 Set-StrictMode -Version Latest
@@ -31,11 +31,8 @@ try
     $Solution = "Programaris.Tenancy.slnx"
     $Output = "artifacts/nuget"
 
-    $Projects = @(
-        "src/Programaris.Tenancy.Abstractions/Programaris.Tenancy.Abstractions.csproj",
-        "src/Programaris.Tenancy/Programaris.Tenancy.csproj",
-        "src/Programaris.Tenancy.AspNetCore/Programaris.Tenancy.AspNetCore.csproj"
-    )
+    $Distribution = Get-Content "distribution.json" -Raw | ConvertFrom-Json
+    $Projects = @($Distribution.packages | ForEach-Object { $_.path })
 
     Invoke-Checked "Validate distribution" {
         python eng/validate_distribution.py

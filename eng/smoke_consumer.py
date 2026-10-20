@@ -5,6 +5,7 @@ import argparse
 import os
 import subprocess
 import tempfile
+import xml.etree.ElementTree as ET
 
 from pathlib import Path
 
@@ -13,6 +14,7 @@ PACKAGES = (
     "Programaris.Tenancy.Abstractions",
     "Programaris.Tenancy",
     "Programaris.Tenancy.AspNetCore",
+    "Programaris.Tenancy.Http",
 )
 
 
@@ -24,6 +26,7 @@ using System.Net.Http;
 using Programaris.Tenancy;
 using Programaris.Tenancy.Abstractions;
 using Programaris.Tenancy.AspNetCore;
+using Programaris.Tenancy.Http;
 
 namespace Programaris.Tenancy.Consumer
 {
@@ -48,7 +51,15 @@ namespace Programaris.Tenancy.Consumer
                 throw new InvalidOperationException("HTTP tenant propagation failed.");
             }
 
-            Console.WriteLine("ASP.NET Core package consumer smoke test passed.");
+            using var outgoing = new HttpRequestMessage(HttpMethod.Get, "https://identity.programaris.com.br/v1/users");
+            outgoing.WithProgramarisTenant(tenant);
+
+            if (outgoing.Headers.GetValues("X-Tenant").Single() != "programaris")
+            {
+                throw new InvalidOperationException("The new outbound HTTP package is not consumable.");
+            }
+
+            Console.WriteLine("ASP.NET Core and outbound HTTP consumer smoke tests passed.");
         }
     }
 }
@@ -88,8 +99,8 @@ namespace Programaris.Tenancy.PortableConsumer
 
 
 CONSUMERS = {
-    "net10.0": ("Programaris.Tenancy.AspNetCore", ASP_NET_CORE_PROGRAM),
-    "net8.0": ("Programaris.Tenancy", PORTABLE_PROGRAM),
+    "net10.0": (("Programaris.Tenancy.AspNetCore", "Programaris.Tenancy.Http"), ASP_NET_CORE_PROGRAM),
+    "net8.0": (("Programaris.Tenancy",), PORTABLE_PROGRAM),
 }
 
 
@@ -101,6 +112,15 @@ def run_command(command, environment):
         check=True,
         env=environment,
     )
+
+
+def write_nuget_config(path, local_feed):
+    root = ET.Element("configuration")
+    sources = ET.SubElement(root, "packageSources")
+    ET.SubElement(sources, "clear")
+    ET.SubElement(sources, "add", {"key": "local", "value": str(local_feed)})
+    ET.SubElement(sources, "add", {"key": "nuget.org", "value": "https://api.nuget.org/v3/index.json"})
+    ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
 
 
 def validate_packages(directory, version):
@@ -143,7 +163,11 @@ def main():
 
     validate_packages(local_feed, args.version)
 
-    package_id, program = CONSUMERS[args.framework]
+    package_ids, program = CONSUMERS[args.framework]
+    package_references = "\n".join(
+        f'    <PackageReference Include="{package_id}" Version="{args.version}" />'
+        for package_id in package_ids
+    )
 
     with tempfile.TemporaryDirectory(prefix="tenancy-nuget-consumer-") as temp:
         work = Path(temp)
@@ -162,8 +186,7 @@ def main():
     <NuGetAudit>false</NuGetAudit>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="{package_id}"
-                      Version="{args.version}" />
+{package_references}
   </ItemGroup>
 </Project>
 """,
@@ -172,8 +195,11 @@ def main():
 
         (work / "Program.cs").write_text(program, encoding="utf-8")
 
+        config = work / "NuGet.Config"
+        write_nuget_config(config, local_feed)
+
         run_command(
-            ["dotnet", "restore", str(project), "--source", str(local_feed)],
+            ["dotnet", "restore", str(project), "--configfile", str(config)],
             environment,
         )
 
